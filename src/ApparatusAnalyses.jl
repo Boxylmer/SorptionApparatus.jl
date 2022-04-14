@@ -4,7 +4,6 @@ Holds methods to write out data that can only be found by combining two or more 
 For example, transient and equilibrium data are required to get kinetic and thermodynamic factors of diffusion
 """
 module KineticAnalysisHelper
-    using PolymerMembranes
     const default_kinetic_sheet_name = "Sorption Kinetics Analysis"
 
     const title_col, step_start_col = 1, 2
