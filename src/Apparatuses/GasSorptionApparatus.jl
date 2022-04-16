@@ -35,19 +35,19 @@ function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer; transien
     polymer_volume = gss.polymer_mass / gss.polymer_density
     bead_volume = gss.vol_bead * gss.n_beads
     mesh_volume = gss.mesh_mass / gss.alum_dens
-    real_sampling_chamber_volume = (gss.sampling_chamber_volume - polymer_volume - bead_volume - mesh_volume) * L_PER_CC
+    real_sampling_chamber_volume = (gss.sampling_chamber_volume - polymer_volume - bead_volume - mesh_volume) * MembraneBase.L_PER_CC
 
 
 
-    real_charge_chamber_volume = gss.charge_chamber_volume * L_PER_CC    
-    v_i_ch  = PengRobinsonState(gss.penetrant; t=gss.temperature, p=ATM_PER_PA * gss.charge_chamber_initial_pressures[step], component_mode=component_mode).volume
+    real_charge_chamber_volume = gss.charge_chamber_volume * MembraneBase.L_PER_CC    
+    v_i_ch  = PengRobinsonState(gss.penetrant; t=gss.temperature, p=MembraneBase.ATM_PER_PA * gss.charge_chamber_initial_pressures[step], component_mode=component_mode).volume
     n_i_ch  = real_charge_chamber_volume / v_i_ch
     
-    v_f_ch  = PengRobinsonState(gss.penetrant; t=gss.temperature, p=ATM_PER_PA * gss.charge_chamber_final_pressures[step], component_mode=component_mode).volume
+    v_f_ch  = PengRobinsonState(gss.penetrant; t=gss.temperature, p=MembraneBase.ATM_PER_PA * gss.charge_chamber_final_pressures[step], component_mode=component_mode).volume
     n_f_ch  = real_charge_chamber_volume / v_f_ch
     
     if isnothing(transient_pressure)
-        v_f_s = PengRobinsonState(gss.penetrant; t=gss.temperature, p=ATM_PER_PA * gss.sampling_chamber_final_pressures[step], component_mode=component_mode).volume
+        v_f_s = PengRobinsonState(gss.penetrant; t=gss.temperature, p=MembraneBase.ATM_PER_PA * gss.sampling_chamber_final_pressures[step], component_mode=component_mode).volume
     else
         v_f_s = PengRobinsonState(gss.penetrant; t=gss.temperature, p=ATM_PER_PA * transient_pressure, component_mode=component_mode).volume
     end
@@ -56,7 +56,7 @@ function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer; transien
     if step == 1
         n_fm1_s = 0
     else
-        v_fm1_s = PengRobinsonState(gss.penetrant; t=gss.temperature, p=ATM_PER_PA * gss.sampling_chamber_final_pressures[step - 1], component_mode=component_mode).volume
+        v_fm1_s = PengRobinsonState(gss.penetrant; t=gss.temperature, p=MembraneBase.ATM_PER_PA * gss.sampling_chamber_final_pressures[step - 1], component_mode=component_mode).volume
         n_fm1_s = real_sampling_chamber_volume / v_fm1_s
     end
 

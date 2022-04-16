@@ -4,6 +4,8 @@ Holds methods to write out data that can only be found by combining two or more 
 For example, transient and equilibrium data are required to get kinetic and thermodynamic factors of diffusion
 """
 module KineticAnalysisHelper
+    using MembraneBase
+    
     const default_kinetic_sheet_name = "Sorption Kinetics Analysis"
 
     const title_col, step_start_col = 1, 2
@@ -85,17 +87,17 @@ function write_kinetic_analysis(excel_file, iso::IsothermData, transient_system:
     num_steps = transient_system.setup.num_steps
     
     # Write out data using the fickian model
-    fickian_deconvolution = deconvolute_diffusivity(iso, transient_system.fickian_models, semi_thickness_cm)
+    fickian_deconvolution = MobilityFactorAnalysis(iso, transient_system.fickian_models, semi_thickness_cm)
     current_row = KiAnCo.step_start_row
     KiAnCo._write_kinetic_analysis_header_row(sheet, current_row - 1, "W/ fickian model")
     KiAnCo._write_deconvolved_diffusivity_table(sheet, fickian_deconvolution, iso, transient_system.fickian_diffusivities, current_row)
     
-    bh_deconvolution = deconvolute_diffusivity(iso, transient_system.bh_models, semi_thickness_cm)
+    bh_deconvolution = MobilityFactorAnalysis(iso, transient_system.bh_models, semi_thickness_cm)
     current_row += num_steps + 2
     KiAnCo._write_kinetic_analysis_header_row(sheet, current_row - 1, "W/ BH model")
     KiAnCo._write_deconvolved_diffusivity_table(sheet, bh_deconvolution, iso, transient_system.bh_diffusivities, current_row)
     
-    mbh_deconvolution = deconvolute_diffusivity(iso, transient_system.mbh_models, semi_thickness_cm)
+    mbh_deconvolution = MobilityFactorAnalysis(iso, transient_system.mbh_models, semi_thickness_cm)
     current_row += num_steps + 2
     KiAnCo._write_kinetic_analysis_header_row(sheet, current_row - 1, "W/ MBH model")
     KiAnCo._write_deconvolved_diffusivity_table(sheet, mbh_deconvolution, iso, transient_system.mbh_diffusivities, current_row)

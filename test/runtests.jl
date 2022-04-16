@@ -1,5 +1,6 @@
 using SorptionApparatus
 using Test
+using Revise
 
 @testset "SorptionApparatus.jl" begin
     # Vapor Sorption Apparatus
