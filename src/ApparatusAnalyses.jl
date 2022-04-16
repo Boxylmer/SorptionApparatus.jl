@@ -338,13 +338,13 @@ Methods are provided for a single analysis, or vectors of analyses (all written 
 See [`dual_mode_diffusivity_deconvolution`](@ref)
 """
 function write_dual_mode_diffusivity_deconvolution(
-    filepath::AbstractString, analysis::DualModeDiffusivityDeconvolution; 
+    filepath::AbstractString, analysis::PartialImmobilizationModel; 
     analysis_name = missing)
     write_dual_mode_diffusivity_deconvolution(filepath, [analysis]; analyses_names = [analysis_name])
 end
 function write_dual_mode_diffusivity_deconvolution(
     filepath::AbstractString,
-    analyses::AbstractVector{DualModeDiffusivityDeconvolution};
+    analyses::AbstractVector{PartialImmobilizationModel};
     analyses_names::AbstractVector = missing)
     permeability_deconvolution_results = []
 

@@ -7,6 +7,7 @@ version = "0.1.0"
 MembraneBase = "a9449b16-1c3f-48ab-aa2c-0b9c6d97beee"
 MembraneEOS = "11a4bec2-2c27-4554-8fe6-a2de72ffe064"
 SorptionModels = "44adabc6-386d-4db0-bb6e-0f7b06129544"
+XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
 julia = "1"
