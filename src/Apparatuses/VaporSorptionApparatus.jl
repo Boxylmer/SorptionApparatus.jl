@@ -73,7 +73,7 @@ function moles_sorbed_during_step(vss::VaporSorptionSetup, step::Integer; transi
     term_2 = p_f * (vc + vs)   # final moles in the entire system
     term_3 = p_fm1 * (vc + vs) # final moles in the previous step
     term_4 = pch_fm1 * vc      # final moles in the charge chamber after closing the valve
-    total_moles_sorbed_during_step = (term_1 - term_2 + term_3 - term_4) / t / R_PA_M3_K_MOL
+    total_moles_sorbed_during_step = (term_1 - term_2 + term_3 - term_4) / t / MembraneBase.R_PA_M3_K_MOL
     return total_moles_sorbed_during_step
 end
 moles_sorbed_during_step(system::VaporSorptionSystem, step; transient_pressure=nothing) = moles_sorbed_during_step(system.setup, step; transient_pressure)
@@ -85,13 +85,13 @@ end
 function VaporSorptionSystem(vss::VaporSorptionSetup)
     nps_at_each_step = [moles_sorbed_during_step(vss, i) for i in 1:vss.num_steps]
     nps = [sum(nps_at_each_step[1:i]) for i in 1:vss.num_steps]
-    concs = [nps[i] / vss.polymer_mass * CC_PER_MOL_STP * vss.polymer_density for i in 1:vss.num_steps]
+    concs = [nps[i] / vss.polymer_mass * MembraneBase.CC_PER_MOL_STP * vss.polymer_density for i in 1:vss.num_steps]
 
     # define what equilibrium pressures are
-    final_pressures = vss.system_final_pressures * MPA_PER_PA
+    final_pressures = vss.system_final_pressures * MembraneBase.MPA_PER_PA
     
     # calculate vapor pressure
-    vap_pres = antoines_vapor_pressure(vss.antoine_a, vss.antoine_b, vss.antoine_c, vss.temperature) * MPA_PER_BAR
+    vap_pres = MembraneBase.antoines_vapor_pressure(vss.antoine_a, vss.antoine_b, vss.antoine_c, vss.temperature) * MembraneBase.MPA_PER_BAR
 
     # approximate the activities
     activities = final_pressures / vap_pres

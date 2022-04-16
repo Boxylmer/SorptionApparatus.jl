@@ -64,21 +64,21 @@ function TransientSorptionSystem(tss::TransientSorptionSetup; verbose=false)
         push!(
             fickian_models, 
             fit_transient_sorption_model(
-                step_data, :FickianSorptionModel; interpolation_method=tss.interpolation_method, interpolation_datapoints=tss.interpolation_count,
+                step_data, FickianSorption(); interpolation_method=tss.interpolation_method, interpolation_datapoints=tss.interpolation_count,
                 uncertainty_method=:Bootstrap)
         )
         if verbose; next!(p); end
         push!(
             bh_models,
             fit_transient_sorption_model(
-                step_data, :BerensHopfenbergSorptionModel; interpolation_method=tss.interpolation_method, interpolation_datapoints=tss.interpolation_count,
+                step_data, BerensHopfenbergSorption(); interpolation_method=tss.interpolation_method, interpolation_datapoints=tss.interpolation_count,
                 uncertainty_method=:Bootstrap, num_uncertainty_resamples=tss.resampling_count)
         )
         if verbose; next!(p); end
         push!(
             mbh_models,
             fit_transient_sorption_model(
-                step_data, :ModifiedBerensHopfenbergSorptionModel; interpolation_method=tss.interpolation_method, interpolation_datapoints=tss.interpolation_count,
+                step_data, ModifiedBerensHopfenbergSorption(); interpolation_method=tss.interpolation_method, interpolation_datapoints=tss.interpolation_count,
                 uncertainty_method=:Bootstrap)
         )
         if verbose; next!(p); end
