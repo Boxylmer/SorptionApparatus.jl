@@ -324,8 +324,8 @@ function write_error_analysis(::GasSorptionApparatus, system::GasSorptionSystem,
     end
 end
 
-function generatetemplate(::GasSorptionApparatus; folder = "", filename = GSAHelper.default_file_name)
-    XLSX.openxlsx(joinpath(folder, filename), mode="w") do xf
+function generatetemplate(::GasSorptionApparatus, filepath = GSAHelper.default_file_name)
+    XLSX.openxlsx(filepath, mode="w") do xf
         sheet = xf[1]
         XLSX.rename!(sheet, GSAHelper.default_sheet_title)
         
@@ -349,7 +349,7 @@ function generatetemplate(::GasSorptionApparatus; folder = "", filename = GSAHel
 
     end 
     # add transient template
-    generatetemplate(TransientSorptionApparatus(), folder=folder, filename=filename; standalone=false)
+    generatetemplate(TransientSorptionApparatus(), filepath; standalone=false)
 end
 
 function readtemplate(::GasSorptionApparatus, path::AbstractString)

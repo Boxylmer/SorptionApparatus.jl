@@ -304,8 +304,8 @@ function write_error_analysis(::VaporSorptionApparatus, system::VaporSorptionSys
 end
 
 # generate, read, and process (read, evaluate, and write) templates
-function generatetemplate(::VaporSorptionApparatus; folder = "", filename = VSAHelper.default_file_name)
-    XLSX.openxlsx(joinpath(folder, filename), mode="w") do xf
+function generatetemplate(::VaporSorptionApparatus, filepath = VSAHelper.default_file_name)
+    XLSX.openxlsx(filepath, mode="w") do xf
         sheet = xf[1]
         XLSX.rename!(sheet, VSAHelper.default_sheet_title)
         sheet[VSAHelper.overall_header] = "Overall Properties"; sheet[VSAHelper.overall_val] = "Value"; sheet[VSAHelper.overall_err] = "Uncertainty"
@@ -349,7 +349,7 @@ function generatetemplate(::VaporSorptionApparatus; folder = "", filename = VSAH
     end
 
     # add transient input
-    generatetemplate(TransientSorptionApparatus(), folder=folder, filename=filename; standalone=false)
+    generatetemplate(TransientSorptionApparatus(), filepath; standalone=false)
     return nothing
 end
 

@@ -172,10 +172,10 @@ module TSAHelper
 
     const default_num_steps = 9
 end
-function generatetemplate(::TransientSorptionApparatus; folder = "", filename=TSAHelper.default_file_name, standalone=true) # todo check if the file exists instead of standalone
+function generatetemplate(::TransientSorptionApparatus, filepath=TSAHelper.default_file_name; standalone=true) # todo check if the file exists instead of standalone
     writemode="w"
     if !standalone writemode = "rw" end
-    XLSX.openxlsx(joinpath(folder, filename), mode=writemode) do xf
+    XLSX.openxlsx(filepath, mode=writemode) do xf
         if !standalone
             sheet = XLSX.addsheet!(xf, TSAHelper.default_sheet_name)
         else
