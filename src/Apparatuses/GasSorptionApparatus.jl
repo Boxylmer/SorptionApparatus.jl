@@ -8,7 +8,8 @@ struct GasSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PD, PM, NB, VB, MM, AD, T
 
     charge_chamber_volume::CCV                          #
     sampling_chamber_volume::SCV                        #    
-    penetrant::ChemicalParameters                       #
+    penetrant::MembraneEOS.CubicParameters              #
+    cubicmodel::MembraneEOS.CubicModel                  #
 
     polymer_density::PD                                 #
     polymer_mass::PM                                    #
@@ -31,32 +32,32 @@ struct GasSorptionSystem{GSS, MSAS, ISO, TSS}
     transient_system::TSS
 end 
 
-function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer; transient_pressure=nothing, component_mode=false)
+function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer; transient_pressure=nothing)
     polymer_volume = gss.polymer_mass / gss.polymer_density
     bead_volume = gss.vol_bead * gss.n_beads
     mesh_volume = gss.mesh_mass / gss.alum_dens
     real_sampling_chamber_volume = (gss.sampling_chamber_volume - polymer_volume - bead_volume - mesh_volume) * MembraneBase.L_PER_CC
 
-
-
     real_charge_chamber_volume = gss.charge_chamber_volume * MembraneBase.L_PER_CC    
-    v_i_ch  = PengRobinsonState(gss.penetrant; t=gss.temperature, p=MembraneBase.ATM_PER_PA * gss.charge_chamber_initial_pressures[step], component_mode=component_mode).volume
-    n_i_ch  = real_charge_chamber_volume / v_i_ch
     
-    v_f_ch  = PengRobinsonState(gss.penetrant; t=gss.temperature, p=MembraneBase.ATM_PER_PA * gss.charge_chamber_final_pressures[step], component_mode=component_mode).volume
-    n_f_ch  = real_charge_chamber_volume / v_f_ch
+    v_i_ch = volume(gss.cubicmodel, MembraneBase.ATM_PER_PA * gss.charge_chamber_initial_pressures[step], gss.temperature)
+    n_i_ch = real_charge_chamber_volume / v_i_ch
+    
+    
+    v_f_ch = volume(gss.cubicmodel, MembraneBase.ATM_PER_PA * gss.charge_chamber_final_pressures[step], gss.temperature)
+    n_f_ch = real_charge_chamber_volume / v_f_ch
     
     if isnothing(transient_pressure)
-        v_f_s = PengRobinsonState(gss.penetrant; t=gss.temperature, p=MembraneBase.ATM_PER_PA * gss.sampling_chamber_final_pressures[step], component_mode=component_mode).volume
+        v_f_s = volume(gss.cubicmodel, MembraneBase.ATM_PER_PA * gss.sampling_chamber_final_pressures[step], gss.temperature)
     else
-        v_f_s = PengRobinsonState(gss.penetrant; t=gss.temperature, p=ATM_PER_PA * transient_pressure, component_mode=component_mode).volume
+        v_f_s = volume(gss.cubicmodel, MembraneBase.ATM_PER_PA * transient_pressure, gss.temperature)
     end
-    n_f_s   = real_sampling_chamber_volume / v_f_s
+    n_f_s = real_sampling_chamber_volume / v_f_s
     
     if step == 1
         n_fm1_s = 0
     else
-        v_fm1_s = PengRobinsonState(gss.penetrant; t=gss.temperature, p=MembraneBase.ATM_PER_PA * gss.sampling_chamber_final_pressures[step - 1], component_mode=component_mode).volume
+        v_fm1_s = volume(gss.cubicmodel, MembraneBase.ATM_PER_PA * gss.sampling_chamber_final_pressures[step - 1], gss.temperature)
         n_fm1_s = real_sampling_chamber_volume / v_fm1_s
     end
 
@@ -74,17 +75,15 @@ function GasSorptionSystem(template_filepath::AbstractString;  kwargs...)
     return GasSorptionSystem(gss;  kwargs...)
 end
 
-function GasSorptionSystem(gss::GasSorptionSetup; component_mode=false)
-    nps_at_each_step = [moles_sorbed_during_step(gss, i; component_mode=component_mode) for i in 1:gss.num_steps]
+function GasSorptionSystem(gss::GasSorptionSetup)
+    nps_at_each_step = [moles_sorbed_during_step(gss, i) for i in 1:gss.num_steps]
     nps = [sum(nps_at_each_step[1:i]) for i in 1:gss.num_steps]
-    concs = [nps[i] / gss.polymer_mass * CC_PER_MOL_STP * gss.polymer_density for i in 1:gss.num_steps]
+    concs = [nps[i] / gss.polymer_mass * MembraneBase.CC_PER_MOL_STP * gss.polymer_density for i in 1:gss.num_steps]
 
     # define what equilibrium pressures are
-    final_pressures = gss.sampling_chamber_final_pressures * MPA_PER_PA
+    final_pressures = gss.sampling_chamber_final_pressures * MembraneBase.MPA_PER_PA
 
-    states = [EOS(PengRobinson(), gss.penetrant; p=pres ./ MPA_PER_ATM, t=gss.temperature) for pres in final_pressures]
-    equilibrium_fugacities = [fugacities(state)[1] for state in states] * MPA_PER_ATM # MPa
-
+    equilibrium_fugacities = [fugacity(gss.cubicmodel, pres ./ MembraneBase.MPA_PER_ATM, gss.temperature)[1] for pres in final_pressures] * MembraneBase.MPA_PER_ATM # MPa
     # handle transients if present
     if isnothing(gss.transient_sorption_setup)
         transient_sorption_system = nothing
@@ -95,7 +94,7 @@ function GasSorptionSystem(gss::GasSorptionSetup; component_mode=false)
     # create an isotherm
     isotherm = IsothermData(
         partial_pressures_mpa=final_pressures, concentrations_cc=concs, fugacities_mpa=equilibrium_fugacities, 
-        temperature_k=gss.temperature, rho_pol_g_cm3=gss.polymer_density, pen_mws_g_mol=gss.penetrant.molecular_weight)
+        temperature_k=gss.temperature, rho_pol_g_cm3=gss.polymer_density, pen_mws_g_mol=molecular_weight(gss.penetrant))
     system = GasSorptionSystem(gss, nps, isotherm, transient_sorption_system)
     return system
 end
@@ -230,15 +229,15 @@ end
 function create_error_analysis(::GasSorptionApparatus, system::GasSorptionSystem)
     setup = system.setup
     # component mode will use finite differencing via the @uncertain macro to fully determine the uncertainty_components of the isotherm
-    isotherm_concs = concentration(GasSorptionSystem(setup; component_mode=true).isotherm)
+    isotherm_concs = concentration(system.isotherm)
     analyses = []
 
     for (step_idx, conc) in enumerate(isotherm_concs)
 
-        omega = fractional_uncertainty_contribution(conc, setup.penetrant.acentric_factor)
-        pc = fractional_uncertainty_contribution(conc, setup.penetrant.critical_pressure)
-        tc = fractional_uncertainty_contribution(conc, setup.penetrant.critical_temperature)
-        pen_mw = fractional_uncertainty_contribution(conc, setup.penetrant.molecular_weight)
+        omega = fractional_uncertainty_contribution(conc, MembraneEOS.acentric_factor(setup.penetrant))
+        pc = fractional_uncertainty_contribution(conc, MembraneEOS.critical_pressure(setup.penetrant))
+        tc = fractional_uncertainty_contribution(conc, MembraneEOS.critical_temperature(setup.penetrant))
+        pen_mw = fractional_uncertainty_contribution(conc, MembraneEOS.molecular_weight(setup.penetrant))
         pol_dens = fractional_uncertainty_contribution(conc, setup.polymer_density)
         pol_mass = fractional_uncertainty_contribution(conc, setup.polymer_mass)
         temperature = fractional_uncertainty_contribution(conc, setup.temperature)
@@ -280,8 +279,8 @@ function write_error_analysis(::GasSorptionApparatus, system::GasSorptionSystem,
     # write out the initial things
     sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col, dim=1] = ["Variable", "Value", "Uncertainty", "Units"]
     sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col + GSAHelper.relative_omega_contribution_col, dim=1] = ["ω", setup.penetrant.acentric_factor.val, setup.penetrant.acentric_factor.err] 
-    sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col + GSAHelper.relative_pc_contribution_col, dim=1] = ["Pc", setup.penetrant.critical_pressure.val, setup.penetrant.critical_pressure.err, "atm"]
-    sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col + GSAHelper.relative_tc_contribution_col, dim=1] = ["Tc", setup.penetrant.critical_temperature.val, setup.penetrant.critical_temperature.err, "K"]
+    sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col + GSAHelper.relative_pc_contribution_col, dim=1] = ["Pc", setup.penetrant.critical_pressure_atm.val, setup.penetrant.critical_pressure_atm.err, "atm"]
+    sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col + GSAHelper.relative_tc_contribution_col, dim=1] = ["Tc", setup.penetrant.critical_temperature_k.val, setup.penetrant.critical_temperature_k.err, "K"]
     sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col + GSAHelper.relative_pen_mw_contribution_col, dim=1] = ["Pen MW", setup.penetrant.molecular_weight.val, setup.penetrant.molecular_weight.err, "g/mol"]
     sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col + GSAHelper.relative_pol_dens_contribution_col, dim=1] = ["Pol Dens", setup.polymer_density.val, setup.polymer_density.err, "g/cm3"]
     sheet[GSAHelper.contribution_table_start_row, GSAHelper.contribution_table_start_col + GSAHelper.relative_pol_mass_contribution_col, dim=1] = ["Pol Mass", setup.polymer_mass.val, setup.polymer_mass.err, "g"]
@@ -366,9 +365,9 @@ function readtemplate(::GasSorptionApparatus, path::AbstractString)
     _tc = sheet[GSAHelper.tc] ± (ismissing(sheet[GSAHelper.tc_err]) ? 0 : sheet[GSAHelper.tc_err])
     _mw = sheet[GSAHelper.mw] ± (ismissing(sheet[GSAHelper.mw_err]) ? 0 : sheet[GSAHelper.mw_err])
 
-    # todo conditionals to look up things automatically (probably if there aren't *any* critical data present)
-    _penetrant = ChemicalParameters(_penetrant_name, critical_pressure=_pc, critical_temperature=_tc, acentric_factor=_omega, molecular_weight=_mw)
-    
+    _penetrant = CubicParameters(_tc, _pc, _omega, _mw)
+    _model = PR(_penetrant)  # todo add options for other models?
+
     if any([ismissing(sheet[GSAHelper.pol_dens])])
         throw(MissingException("Some required polymer parameters are missing from the Excel sheet.")); 
     end
@@ -412,14 +411,14 @@ function readtemplate(::GasSorptionApparatus, path::AbstractString)
     
     # copy of the setup to add to the transient apparatus (it'll grab some of the data to convert pressures to dimensionless sorption)
     temporary_setup = GasSorptionSetup(_t, _initial_charge_pressures, _final_charge_pressures, _final_sampling_pressure, 
-        _vc, _vs, _penetrant, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens, transient_sorption_setup) 
+        _vc, _vs, _penetrant, _model, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens, transient_sorption_setup) 
         
     if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
         transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
     end
 
     setup = GasSorptionSetup(_t, _initial_charge_pressures, _final_charge_pressures, _final_sampling_pressure, 
-            _vc, _vs, _penetrant, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens, transient_sorption_setup) 
+            _vc, _vs, _penetrant, _model, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens, transient_sorption_setup) 
     return setup
 end
 
@@ -454,7 +453,7 @@ function processtemplate(::GasSorptionApparatus, template_path::String, results_
         sheet[GSAHelper.fug_result_err_start, dim=1] = [f.err for f in fugacities(isotherm; component=1)]
         sheet[GSAHelper.mass_frac_result_start, dim=1] = [mf.val for mf in penetrant_mass_fractions(isotherm; component=1)]
         sheet[GSAHelper.mass_frac_result_err_start, dim=1] = [mf.err for mf in penetrant_mass_fractions(isotherm; component=1)]
-        
+
         # dual mode
         dmmodel = fit_dualmode_model(isotherm; uncertainty_method=:JackKnife)
         sheet[GSAHelper.dual_mode_ch_val], sheet[GSAHelper.dual_mode_ch_err] = dmmodel.ch.val, dmmodel.ch.err
@@ -476,7 +475,7 @@ function processtemplate(::GasSorptionApparatus, template_path::String, results_
             
             # write_kinetic_analysis(xf, isotherm, system.transient_system) # need to #todo implement fugacity in the kinetic analysis
         else
-            println("Not running combined apparatus as no transient data was present")
+            # println("Not running combined apparatus as no transient data was present")
         end
 
     end

@@ -14,7 +14,8 @@ module SorptionApparatus
     export TransientSorptionApparatus
     include(joinpath("Apparatuses", "VaporSorptionApparatus.jl"))
     export VaporSorptionApparatus
-    # include(joinpath("Apparatuses", "GasSorptionApparatus.jl"))
+    include(joinpath("Apparatuses", "GasSorptionApparatus.jl"))
+    export GasSorptionApparatus
 
     include(joinpath("ApparatusAnalyses.jl"))
 end
