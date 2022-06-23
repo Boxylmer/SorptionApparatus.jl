@@ -1,6 +1,6 @@
 struct VaporSorptionApparatus end
 
-struct VaporSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PMW, AA, AB, AC, PD, PM, VB, TSS}
+struct VaporSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PMW, AA, AB, AC, PD, PM, VB, TSS, PLQMVT}
     temperature::T
     system_initial_pressures::Vector{CCIP}
     system_final_pressures::Vector{CCFP}
@@ -22,6 +22,7 @@ struct VaporSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PMW, AA, AB, AC, PD, PM
     vol_bead::VB
 
     transient_sorption_setup::TSS
+    penetrant_liquid_phase_molar_volume::PLQMVT
 end
 
 VaporSorptionSetup(path::AbstractString) = readtemplate(VaporSorptionApparatus(), path)
@@ -149,6 +150,13 @@ module VSAHelper
 
     const vapor_pressure_header, vapor_pressure, vapor_pressure_err = "D9", "E9", "F9"
 
+        # optional analyses
+    const optional_analyses_header, optional_analyses_var, optional_analyses_err = "L1", "M1", "N1"
+        # zimm-lundberg
+    const zimm_lundberg_header = "L2"
+    const liq_phase_mol_vol_header, liq_phase_mol_vol_val, liq_phase_mol_vol_err = "L3", "M3", "N3"
+
+
     # results output
     const pres_result_header, pres_result_err_header, pres_result_start, pres_result_err_start = "F11", "G11", "F12", "G12"
     const conc_result_header, conc_result_err_header, conc_result_start, conc_result_err_start = "H11", "I11", "H12", "I12"
@@ -157,7 +165,6 @@ module VSAHelper
     const mass_frac_result_header, mass_frac_result_err_header, mass_frac_result_start, mass_frac_result_err_start = "N11", "O11", "N12", "O12" # todo include mass fracs (ctrl+f the vars)
     const dual_mode_predictions_header, dual_mode_predictions_err_header, dual_mode_predictions_start, dual_mode_predictions_err_start = "P11", "Q11", "P12", "Q12"
     const gab_predictions_header, gab_predictions_err_header, gab_predictions_start, gab_predictions_err_start = "R11", "S11", "R12", "S12"
-    
 
     # parameters output
     const param_header, param_result_header, param_err_header, param_unit_header = "G1", "H1", "I1", "J1"
@@ -334,6 +341,11 @@ function generatetemplate(::VaporSorptionApparatus, filepath = VSAHelper.default
         sheet[VSAHelper.p_sys_fin_header] ="Final System Pressure (Pa)"
         sheet[VSAHelper.p_ch_fin_header] = "Final Charge Pressure (after valve is closed, Pa)"
 
+        # add optional section
+        sheet[VSAHelper.optional_analyses_header] = "Optional Analyses (add values to activate)"; sheet[VSAHelper.optional_analyses_var] = "Value"; sheet[VSAHelper.optional_analyses_err] = "σ"
+        sheet[VSAHelper.zimm_lundberg_header] = "Zimm Lundberg Analysis"
+        sheet[VSAHelper.liq_phase_mol_vol_header] = "Penetrant Liquid Phase Molar Volume (cm3/mol)"
+
         # add step values
         sheet[VSAHelper.step_start, dim=1] = collect(1:7)
 
@@ -407,15 +419,23 @@ function readtemplate(::VaporSorptionApparatus, path::String)  # read a template
     # copy of the setup to add to the transient apparatus (it'll grab some of the data to convert pressures to dimensionless sorption)
     temporary_setup = VaporSorptionSetup(
         _t, _initial_system_pressures, _final_system_pressures, _final_charge_pressures, _vc, _vs, _mw,
-        _antoine_a, _antoine_b, _antoine_c, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nbeads, _vbead, transient_sorption_setup
-        ) 
+        _antoine_a, _antoine_b, _antoine_c, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nbeads, _vbead, transient_sorption_setup,
+        nothing) 
     
     if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
         transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
     end
+
+    if ismissing(sheet[VSAHelper.liq_phase_mol_vol_val])
+        pen_liq_phase_mol_vol = missing
+    else
+        pen_liq_phase_mol_vol = sheet[VSAHelper.liq_phase_mol_vol_val] ± (ismissing(sheet[VSAHelper.liq_phase_mol_vol_err]) ? 0 : sheet[VSAHelper.liq_phase_mol_vol_err])
+    end
+    
     setup = VaporSorptionSetup(
         _t, _initial_system_pressures, _final_system_pressures, _final_charge_pressures, _vc, _vs, _mw,
-        _antoine_a, _antoine_b, _antoine_c, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nbeads, _vbead, transient_sorption_setup
+        _antoine_a, _antoine_b, _antoine_c, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nbeads, _vbead, 
+        transient_sorption_setup, pen_liq_phase_mol_vol
         )
     return setup
 end
@@ -428,7 +448,7 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
 
     # copy the template (this is the only time we will not force by default)
     if template_path == results_path
-        @warn("The vapor sorption template and results file paths were the same")
+        @warn("The vapor sorption template and results file paths were the same.")
         return # not really dealing with this behavior yet, it would directly modify the file
     end
     cp(template_path, results_path; force=overwrite)
@@ -452,7 +472,7 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
         sheet[VSAHelper.vapor_pressure], sheet[VSAHelper.vapor_pressure_err] = system.vapor_pressure.val, system.vapor_pressure.err
         
         # dual mode
-        dmmodel = fit_dualmode_model(isotherm; uncertainty_method=:JackKnife)
+        dmmodel = fit_model(DualMode(), isotherm; uncertainty_method=:JackKnife)
         sheet[VSAHelper.dual_mode_ch_val], sheet[VSAHelper.dual_mode_ch_err] = dmmodel.ch.val, dmmodel.ch.err
         sheet[VSAHelper.dual_mode_b_val], sheet[VSAHelper.dual_mode_b_err] = dmmodel.b.val, dmmodel.b.err
         sheet[VSAHelper.dual_mode_kd_val], sheet[VSAHelper.dual_mode_kd_err] = dmmodel.kd.val, dmmodel.kd.err
@@ -485,6 +505,13 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
         else
             println("Not running combined apparatus as no transient data was present")
         end
+
+        # deal with zimm-lundberg
+        if !ismissing(system.setup.penetrant_liquid_phase_molar_volume)
+            zimm_lundberg_analysis = ZimmLundbergAnalysis(gmmodel, system.activities, system.setup.penetrant_liquid_phase_molar_volume)
+            write_analysis(zimm_lundberg_analysis, xf)
+        end
+
     end
     return system
 
