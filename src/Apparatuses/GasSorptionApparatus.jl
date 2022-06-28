@@ -1,6 +1,6 @@
 struct GasSorptionApparatus end
 
-struct GasSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PD, PM, NB, VB, MM, AD, TSS} 
+struct GasSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PD, PM, NB, VB, MM, AD} 
     temperature::T                                      # kelvin
     charge_chamber_initial_pressures::Vector{CCIP}      # 
     charge_chamber_final_pressures::Vector{CCFP}        #
@@ -20,16 +20,16 @@ struct GasSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PD, PM, NB, VB, MM, AD, T
     vol_bead::VB                                        # 
     mesh_mass::MM                                       # 
     alum_dens::AD                                       # 
-    transient_sorption_setup::TSS  
+    # transient_sorption_setup::TSS  
 end
 
 GasSorptionSetup(path::AbstractString) = readtemplate(GasSorptionApparatus(), path)
 
-struct GasSorptionSystem{GSS, MSAS, ISO, TSS}
+struct GasSorptionSystem{GSS, MSAS, ISO}
     setup::GSS  # need to fix with actual GasSorptionSystem type todo
     moles_sorbed_at_step::AbstractVector{MSAS}
     isotherm::ISO
-    transient_system::TSS
+    # transient_system::TSS
 end 
 
 function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer; transient_pressure=nothing)
@@ -84,18 +84,18 @@ function GasSorptionSystem(gss::GasSorptionSetup)
     final_pressures = gss.sampling_chamber_final_pressures * MembraneBase.MPA_PER_PA
 
     equilibrium_fugacities = [fugacity(gss.cubicmodel, pres ./ MembraneBase.MPA_PER_ATM, gss.temperature)[1] for pres in final_pressures] * MembraneBase.MPA_PER_ATM # MPa
-    # handle transients if present
-    if isnothing(gss.transient_sorption_setup)
-        transient_sorption_system = nothing
-    else
-        transient_sorption_system = TransientSorptionSystem(gss.transient_sorption_setup)
-    end
+    # # handle transients if present
+    # if isnothing(gss.transient_sorption_setup)
+    #     transient_sorption_system = nothing
+    # else
+    #     transient_sorption_system = TransientSorptionSystem(gss.transient_sorption_setup)
+    # end
 
     # create an isotherm
     isotherm = IsothermData(
         partial_pressures_mpa=final_pressures, concentrations_cc=concs, fugacities_mpa=equilibrium_fugacities, 
         temperature_k=gss.temperature, rho_pol_g_cm3=gss.polymer_density, pen_mws_g_mol=molecular_weight(gss.penetrant))
-    system = GasSorptionSystem(gss, nps, isotherm, transient_sorption_system)
+    system = GasSorptionSystem(gss, nps, isotherm)
     return system
 end
 
@@ -344,12 +344,12 @@ function generatetemplate(::GasSorptionApparatus, filepath = GSAHelper.default_f
         sheet[GSAHelper.nb], sheet[GSAHelper.nb_vol], sheet[GSAHelper.nb_vol_err] = 0, 0.13399839, 0
         sheet[GSAHelper.mesh_mass], sheet[GSAHelper.mesh_mass_err] = 0, 0
 
-        sheet[GSAHelper.vs], sheet[GSAHelper.vs_err] = 15.707, 0.06 # todo add values
-        sheet[GSAHelper.vc], sheet[GSAHelper.vc_err] = 18.442, 0.04
+        # sheet[GSAHelper.vs], sheet[GSAHelper.vs_err] = 15.707, 0.06 # todo add values
+        # sheet[GSAHelper.vc], sheet[GSAHelper.vc_err] = 18.442, 0.04
 
     end 
-    # add transient template
-    generatetemplate(TransientSorptionApparatus(), filepath; standalone=false)
+    # # add transient template
+    # generatetemplate(TransientSorptionApparatus(), filepath; standalone=false)
 end
 
 function readtemplate(::GasSorptionApparatus, path::AbstractString)
@@ -407,18 +407,18 @@ function readtemplate(::GasSorptionApparatus, path::AbstractString)
      
     _nsteps = length(_initial_charge_pressures)
 
-    transient_sorption_setup = nothing
+    # transient_sorption_setup = nothing
     
-    # copy of the setup to add to the transient apparatus (it'll grab some of the data to convert pressures to dimensionless sorption)
-    temporary_setup = GasSorptionSetup(_t, _initial_charge_pressures, _final_charge_pressures, _final_sampling_pressure, 
-        _vc, _vs, _penetrant, _model, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens, transient_sorption_setup) 
+    # # copy of the setup to add to the transient apparatus (it'll grab some of the data to convert pressures to dimensionless sorption)
+    # temporary_setup = GasSorptionSetup(_t, _initial_charge_pressures, _final_charge_pressures, _final_sampling_pressure, 
+    #     _vc, _vs, _penetrant, _model, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens, transient_sorption_setup) 
         
-    if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
-        transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
-    end
+    # if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
+    #     transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
+    # end
 
     setup = GasSorptionSetup(_t, _initial_charge_pressures, _final_charge_pressures, _final_sampling_pressure, 
-            _vc, _vs, _penetrant, _model, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens, transient_sorption_setup) 
+            _vc, _vs, _penetrant, _model, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens) 
     return setup
 end
 
@@ -467,16 +467,16 @@ function processtemplate(::GasSorptionApparatus, template_path::String, results_
         # write error analysis 
         write_error_analysis(GasSorptionApparatus(), system, xf)
 
-        if !isnothing(system.transient_system)
-            write_transient_sorption_system_to_sheet(
-                system.transient_system, 
-                xf[TSAHelper.default_sheet_name] 
-            )
+        # if !isnothing(system.transient_system)
+        #     write_transient_sorption_system_to_sheet(
+        #         system.transient_system, 
+        #         xf[TSAHelper.default_sheet_name] 
+        #     )
             
-            # write_kinetic_analysis(xf, isotherm, system.transient_system) # need to #todo implement fugacity in the kinetic analysis
-        else
-            # println("Not running combined apparatus as no transient data was present")
-        end
+        #     # write_kinetic_analysis(xf, isotherm, system.transient_system) # need to #todo implement fugacity in the kinetic analysis
+        # else
+        #     # println("Not running combined apparatus as no transient data was present")
+        # end
 
     end
 
@@ -486,4 +486,62 @@ end
 
 function processtemplate(::GasSorptionApparatus, template_path::String; kwargs...)
     return processtemplate(GasSorptionApparatus(), template_path, nothing; kwargs...)
+end
+
+function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false)
+    if !overwrite
+        # todo check if file exists, error if it does
+    end
+
+    XLSX.openxlsx(filepath, mode="w") do xf
+        sheet = xf[1]
+        XLSX.rename!(sheet, GSAHelper.default_sheet_title)
+        
+        GSAHelper.add_headers_to_sheet(sheet)
+
+        # add temperature
+        sheet[GSAHelper.t] = measurement(setup.temperature).val
+
+        # add step pressures
+        sheet[GSAHelper.step_start, dim=1] = collect(1:length(setup.num_steps))
+        sheet[GSAHelper.p_ch_in_start, dim=1] = strip_measurement_to_value(setup.charge_chamber_initial_pressures) 
+        sheet[GSAHelper.p_ch_fin_start, dim=1] = strip_measurement_to_value(setup.charge_chamber_final_pressures) 
+        sheet[GSAHelper.p_samp_start, dim=1] = strip_measurement_to_value(setup.sampling_chamber_final_pressures) 
+
+        # chamber volumes
+        # charge_chamber_volume::CCV                      
+        # sampling_chamber_volume::SCV                        
+        
+        # peng robinson parameters
+        # penetrant::MembraneEOS.CubicParameters          
+        # cubicmodel::MembraneEOS.CubicModel              
+
+        
+        # polymer_density::PD                             
+        # polymer_mass::PM                                
+        # polymer_name::String                            
+        # num_steps::Int64                                 
+
+        # n_beads::NB                                      
+        # vol_bead::VB                                     
+        # mesh_mass::MM                                    
+        # alum_dens::AD                                    
+
+        
+
+
+        # add default values upon sheet creation
+        sheet[GSAHelper.omega_err], sheet[GSAHelper.pc_err], sheet[GSAHelper.tc_err], sheet[GSAHelper.mw_err] = 0, 0, 0, 0
+
+        sheet[GSAHelper.alum_dens] = 2.71; sheet[GSAHelper.alum_dens_err] = 0.00
+        
+        sheet[GSAHelper.pres_apparatus_err] = 0.0005
+        
+        sheet[GSAHelper.nb], sheet[GSAHelper.nb_vol], sheet[GSAHelper.nb_vol_err] = 0, 0.13399839, 0
+        sheet[GSAHelper.mesh_mass], sheet[GSAHelper.mesh_mass_err] = 0, 0
+
+        # sheet[GSAHelper.vs], sheet[GSAHelper.vs_err] = 15.707, 0.06 # todo add values
+        # sheet[GSAHelper.vc], sheet[GSAHelper.vc_err] = 18.442, 0.04
+
+    end
 end
