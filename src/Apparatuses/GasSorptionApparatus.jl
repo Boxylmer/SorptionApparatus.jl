@@ -516,9 +516,17 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
         sheet[GSAHelper.vs_err] = measurement(setup.sampling_chamber_volume).err                 
         
         # peng robinson parameters
-        # penetrant::MembraneEOS.CubicParameters 
-
-        # cubicmodel::MembraneEOS.CubicModel              
+        # penetrant::MembraneEOS.CubicParameters
+        sheet[GSAHelper.tc] = measurement(MembraneEOS.critical_temperature(setup.penetrant)).val
+        sheet[GSAHelper.tc_err] = measurement(MembraneEOS.critical_temperature(setup.penetrant)).err
+        sheet[GSAHelper.pc] = measurement(MembraneEOS.critical_pressure(setup.penetrant)).val
+        sheet[GSAHelper.pc_err] = measurement(MembraneEOS.critical_pressure(setup.penetrant)).err
+        sheet[GSAHelper.omega] = measurement(MembraneEOS.acentric_factor(setup.penetrant)).val
+        sheet[GSAHelper.omega_err] = measurement(MembraneEOS.acentric_factor(setup.penetrant)).err
+        sheet[GSAHelper.mw] = measurement(MembraneEOS.molecular_weight(setup.penetrant)).val
+        sheet[GSAHelper.mw_err] = measurement(MembraneEOS.molecular_weight(setup.penetrant)).err
+        
+        # cubicmodel::MembraneEOS.CubicModel needn't be saved as all the information that encodes it is in the cubicparameters          
 
         # polymer density
         sheet[GSAHelper.pol_dens] = measurement(setup.polymer_density).val 
@@ -531,7 +539,8 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
         # polymer name
         sheet[GSAHelper.pol_name] = setup.polymer_name
             
-        # num_steps::Int64                                 
+        # num_steps::Int64 # this should be the number of *complete* steps
+        # todo not really sure if this is needed yet         
 
         # beads
         sheet[GSAHelper.nb] = setup.n_beads
