@@ -501,6 +501,7 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
 
         # add temperature
         sheet[GSAHelper.t] = measurement(setup.temperature).val
+        sheet[GSAHelper.t] = measurement(setup.temperature).err
 
         # add step pressures
         sheet[GSAHelper.step_start, dim=1] = collect(1:length(setup.num_steps))
@@ -509,25 +510,39 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
         sheet[GSAHelper.p_samp_start, dim=1] = strip_measurement_to_value(setup.sampling_chamber_final_pressures) 
 
         # chamber volumes
-        # charge_chamber_volume::CCV                      
-        # sampling_chamber_volume::SCV                        
+        sheet[GSAHelper.vc] = measurement(setup.charge_chamber_volume).val
+        sheet[GSAHelper.vc_err] = measurement(setup.charge_chamber_volume).err
+        sheet[GSAHelper.vs] = measurement(setup.sampling_chamber_volume).val
+        sheet[GSAHelper.vs_err] = measurement(setup.sampling_chamber_volume).err                 
         
         # peng robinson parameters
-        # penetrant::MembraneEOS.CubicParameters          
+        # penetrant::MembraneEOS.CubicParameters 
+
         # cubicmodel::MembraneEOS.CubicModel              
 
+        # polymer density
+        sheet[GSAHelper.pol_dens] = measurement(setup.polymer_density).val 
+        sheet[GSAHelper.pol_dens_err] = measurement(setup.polymer_density).err
         
-        # polymer_density::PD                             
-        # polymer_mass::PM                                
-        # polymer_name::String                            
+        # polymer mass
+        sheet[GSAHelper.pol_mass] = measurement(setup.polymer_mass).val
+        sheet[GSAHelper.pol_mass_err] = measurement(setup.polymer_mass).err
+
+        # polymer name
+        sheet[GSAHelper.pol_name] = setup.polymer_name
+            
         # num_steps::Int64                                 
 
-        # n_beads::NB                                      
-        # vol_bead::VB                                     
-        # mesh_mass::MM                                    
-        # alum_dens::AD                                    
+        # beads
+        sheet[GSAHelper.nb] = setup.n_beads
+        sheet[GSAHelper.nb_vol] = measurement(setup.vol_bead).val
+        sheet[GSAHelper.nb_vol_err] = measurement(setup.vol_bead).err
 
-        
+        # aluminum mesh
+        sheet[GSAHelper.mesh_mass] = measurement(setup.mesh_mass).val
+        sheet[GSAHelper.mesh_mass_err] = measurement(setup.mesh_mass).err
+        sheet[GSAHelper.alum_dens] = measurement(setup.alum_dens).val
+        sheet[GSAHelper.alum_dens_err] = measurement(setup.alum_dens).err                                 
 
 
         # add default values upon sheet creation
