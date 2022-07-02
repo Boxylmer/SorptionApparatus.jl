@@ -9,6 +9,7 @@ module SorptionApparatus
     export generatetemplate
     export readtemplate
     export processtemplate
+    export savetemplate
 
     include(joinpath("Apparatuses", "TransientSorptionApparatus.jl"))
     export TransientSorptionApparatus

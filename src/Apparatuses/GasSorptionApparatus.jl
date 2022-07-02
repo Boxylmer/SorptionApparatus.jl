@@ -501,7 +501,7 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
 
         # add temperature
         sheet[GSAHelper.t] = measurement(setup.temperature).val
-        sheet[GSAHelper.t] = measurement(setup.temperature).err
+        sheet[GSAHelper.t_err] = measurement(setup.temperature).err
 
         # add step pressures
         sheet[GSAHelper.step_start, dim=1] = collect(1:length(setup.num_steps))
@@ -564,8 +564,6 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
         sheet[GSAHelper.nb], sheet[GSAHelper.nb_vol], sheet[GSAHelper.nb_vol_err] = 0, 0.13399839, 0
         sheet[GSAHelper.mesh_mass], sheet[GSAHelper.mesh_mass_err] = 0, 0
 
-        # sheet[GSAHelper.vs], sheet[GSAHelper.vs_err] = 15.707, 0.06 # todo add values
-        # sheet[GSAHelper.vc], sheet[GSAHelper.vc_err] = 18.442, 0.04
 
     end
 end

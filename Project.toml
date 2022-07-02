@@ -1,7 +1,7 @@
 name = "SorptionApparatus"
 uuid = "c53a909a-c477-4ff1-81c4-bc1440289f4f"
 authors = ["Will <carboxylmer@gmail.com> and contributors"]
-version = "0.2.3"
+version = "0.2.4"
 
 [deps]
 Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
