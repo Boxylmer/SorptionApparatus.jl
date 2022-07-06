@@ -524,10 +524,10 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
             if length(setup.charge_chamber_initial_pressures) > 0
                 sheet[GSAHelper.pres_apparatus_err] = maybe_missing_err(setup.charge_chamber_initial_pressures[1])/maybe_missing_val(setup.charge_chamber_initial_pressures[1])
             else
-                sheet[GSAHelper.pres_apparatus_err] = missing
+                sheet[GSAHelper.pres_apparatus_err] = 0
             end
         else
-            sheet[GSAHelper.pres_apparatus_err] = missing
+            sheet[GSAHelper.pres_apparatus_err] = 0
         end
 
         # chamber volumes
