@@ -352,14 +352,23 @@ function generatetemplate(::GasSorptionApparatus, filepath = GSAHelper.default_f
     # generatetemplate(TransientSorptionApparatus(), filepath; standalone=false)
 end
 
-function readtemplate(::GasSorptionApparatus, path::AbstractString)
+function readtemplate(::GasSorptionApparatus, path::AbstractString; verify::Bool=true)
     xf = XLSX.readxlsx(path)
     sheet = xf[1]
-    
-    _penetrant_name = string(sheet[GSAHelper.pen_name])
-    if any([ismissing(sheet[GSAHelper.omega]), ismissing(sheet[GSAHelper.pc]), ismissing(sheet[GSAHelper.tc]), ismissing(sheet[GSAHelper.mw])])
-        throw(MissingException("Some required penetrant parameters are missing from the Excel sheet.")); 
+    if verify
+        if any([ismissing(sheet[GSAHelper.omega]), ismissing(sheet[GSAHelper.pc]), ismissing(sheet[GSAHelper.tc]), ismissing(sheet[GSAHelper.mw])])
+            throw(MissingException("Some required penetrant parameters are missing from the Excel sheet.")); 
+        end
+        if any([ismissing(sheet[GSAHelper.pol_dens])])
+            throw(MissingException("Some required polymer parameters are missing from the Excel sheet.")); 
+        end
+        if any([ismissing(sheet[GSAHelper.t]), ismissing(sheet[GSAHelper.pres_apparatus_err]), ismissing(sheet[GSAHelper.vc]), ismissing(sheet[GSAHelper.vs]),
+            ismissing(sheet[GSAHelper.nb_vol]), ismissing(sheet[GSAHelper.mesh_mass]), ismissing(sheet[GSAHelper.alum_dens])])
+            throw(MissingException("Some required overall properties are missing from the Excel sheet.")); 
+        end
     end
+    _penetrant_name = string(sheet[GSAHelper.pen_name])
+
     _omega = sheet[GSAHelper.omega] ± (ismissing(sheet[GSAHelper.omega_err]) ? 0 : sheet[GSAHelper.omega_err])
     _pc = sheet[GSAHelper.pc] ± (ismissing(sheet[GSAHelper.pc_err]) ? 0 : sheet[GSAHelper.pc_err])
     _tc = sheet[GSAHelper.tc] ± (ismissing(sheet[GSAHelper.tc_err]) ? 0 : sheet[GSAHelper.tc_err])
@@ -368,17 +377,12 @@ function readtemplate(::GasSorptionApparatus, path::AbstractString)
     _penetrant = CubicParameters(_tc, _pc, _omega, _mw)
     _model = PR(_penetrant)  # todo add options for other models?
 
-    if any([ismissing(sheet[GSAHelper.pol_dens])])
-        throw(MissingException("Some required polymer parameters are missing from the Excel sheet.")); 
-    end
+ 
     _polymer_name = string(sheet[GSAHelper.pol_name])
     _pol_dens = sheet[GSAHelper.pol_dens] ± (ismissing(sheet[GSAHelper.pol_dens_err]) ? 0 : sheet[GSAHelper.pol_dens_err])
     _pol_mass = sheet[GSAHelper.pol_mass] ± (ismissing(sheet[GSAHelper.pol_mass_err]) ? 0 : sheet[GSAHelper.pol_mass_err])
 
-    if any([ismissing(sheet[GSAHelper.t]), ismissing(sheet[GSAHelper.pres_apparatus_err]), ismissing(sheet[GSAHelper.vc]), ismissing(sheet[GSAHelper.vs]),
-            ismissing(sheet[GSAHelper.nb_vol]), ismissing(sheet[GSAHelper.mesh_mass]), ismissing(sheet[GSAHelper.alum_dens])])
-        throw(MissingException("Some required overall properties are missing from the Excel sheet.")); 
-    end
+  
     _t = sheet[GSAHelper.t] ± (ismissing(sheet[GSAHelper.t_err]) ? 0 : sheet[GSAHelper.t_err])
     _p_err = sheet[GSAHelper.pres_apparatus_err]
     _vc = sheet[GSAHelper.vc] ± (ismissing(sheet[GSAHelper.vc_err]) ? 0 : sheet[GSAHelper.vc_err][])
@@ -394,11 +398,13 @@ function readtemplate(::GasSorptionApparatus, path::AbstractString)
     _final_charge_pressures = chop_vector_at_first_missing_value(pressure_info_matrix[:, GSAHelper.p_ch_fin_col])
     _final_sampling_pressure = chop_vector_at_first_missing_value(pressure_info_matrix[:, GSAHelper.p_samp_col])
     
-        # ensure chopped steps are of the correct length
-        # TODO: verify that we will always need information at every step, etc
-    if !(length(_initial_charge_pressures) == length(_final_charge_pressures) == length(_final_sampling_pressure))
-        throw(MissingException("The number of steps specified didn't match up. 
-        Was a value left blank or was the sheet shifted away from the expected step start point: " * GSAHelper.step_start *"?"))
+    # ensure chopped steps are of the correct length
+    # TODO: verify that we will always need information at every step, etc
+    if verify
+        if !(length(_initial_charge_pressures) == length(_final_charge_pressures) == length(_final_sampling_pressure))
+            throw(MissingException("The number of steps specified didn't match up. 
+            Was a value left blank or was the sheet shifted away from the expected step start point: " * GSAHelper.step_start *"?"))
+        end
     end
 
     _initial_charge_pressures = add_uncertainty_to_values(_initial_charge_pressures, _p_err)
