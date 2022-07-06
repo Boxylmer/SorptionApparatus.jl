@@ -508,43 +508,55 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
         
         GSAHelper.add_headers_to_sheet(sheet)
 
+        maybe_missing_val(obj) = ismissing(obj) ? missing : measurement(obj).val
+        maybe_missing_err(obj) = ismissing(obj) ? missing : measurement(obj).err
+
         # add temperature
-        sheet[GSAHelper.t] = measurement(setup.temperature).val
-        sheet[GSAHelper.t_err] = measurement(setup.temperature).err
+        sheet[GSAHelper.t] = maybe_missing_val(setup.temperature)
+        sheet[GSAHelper.t_err] = maybe_missing_err(setup.temperature)
 
         # add step pressures
         sheet[GSAHelper.step_start, dim=1] = collect(1:length(setup.num_steps))
         sheet[GSAHelper.p_ch_in_start, dim=1] = strip_measurement_to_value(setup.charge_chamber_initial_pressures) 
         sheet[GSAHelper.p_ch_fin_start, dim=1] = strip_measurement_to_value(setup.charge_chamber_final_pressures) 
-        sheet[GSAHelper.p_samp_start, dim=1] = strip_measurement_to_value(setup.sampling_chamber_final_pressures) 
+        sheet[GSAHelper.p_samp_start, dim=1] = strip_measurement_to_value(setup.sampling_chamber_final_pressures)
+        if !ismissing(setup.charge_chamber_initial_pressures)
+            if length(setup.charge_chamber_initial_pressures) > 0
+                sheet[GSAHelper.pres_apparatus_err] = maybe_missing_err(setup.charge_chamber_initial_pressures[1])/maybe_missing_val(setup.charge_chamber_initial_pressures[1])
+            else
+                sheet[GSAHelper.pres_apparatus_err] = missing
+            end
+        else
+            sheet[GSAHelper.pres_apparatus_err] = missing
+        end
 
         # chamber volumes
-        sheet[GSAHelper.vc] = measurement(setup.charge_chamber_volume).val
-        sheet[GSAHelper.vc_err] = measurement(setup.charge_chamber_volume).err
-        sheet[GSAHelper.vs] = measurement(setup.sampling_chamber_volume).val
-        sheet[GSAHelper.vs_err] = measurement(setup.sampling_chamber_volume).err                 
+        sheet[GSAHelper.vc] = maybe_missing_val(setup.charge_chamber_volume)
+        sheet[GSAHelper.vc_err] = maybe_missing_err(setup.charge_chamber_volume)
+        sheet[GSAHelper.vs] = maybe_missing_val(setup.sampling_chamber_volume)
+        sheet[GSAHelper.vs_err] = maybe_missing_err(setup.sampling_chamber_volume)               
         
         # penetrant name
         sheet[GSAHelper.pen_name] = setup.penetrant_name
 
         # peng robinson parameters
-        sheet[GSAHelper.tc] = measurement(setup.pen_tc).val
-        sheet[GSAHelper.tc_err] = measurement(setup.pen_tc).err
-        sheet[GSAHelper.pc] = measurement(setup.pen_pc).val
-        sheet[GSAHelper.pc_err] = measurement(setup.pen_pc).err
-        sheet[GSAHelper.omega] = measurement(setup.pen_omega).val
-        sheet[GSAHelper.omega_err] = measurement(setup.pen_omega).err
-        sheet[GSAHelper.mw] = measurement(setup.pen_mw).val
-        sheet[GSAHelper.mw_err] = measurement(setup.pen_mw).err
+        sheet[GSAHelper.tc] = maybe_missing_val(setup.pen_tc)
+        sheet[GSAHelper.tc_err] = maybe_missing_err(setup.pen_tc)
+        sheet[GSAHelper.pc] = maybe_missing_val(setup.pen_pc)
+        sheet[GSAHelper.pc_err] = maybe_missing_err(setup.pen_pc)
+        sheet[GSAHelper.omega] = maybe_missing_val(setup.pen_omega)
+        sheet[GSAHelper.omega_err] = maybe_missing_err(setup.pen_omega)
+        sheet[GSAHelper.mw] = maybe_missing_val(setup.pen_mw)
+        sheet[GSAHelper.mw_err] = maybe_missing_err(setup.pen_mw)
             
 
         # polymer density
-        sheet[GSAHelper.pol_dens] = measurement(setup.polymer_density).val 
-        sheet[GSAHelper.pol_dens_err] = measurement(setup.polymer_density).err
+        sheet[GSAHelper.pol_dens] = maybe_missing_val(setup.polymer_density)
+        sheet[GSAHelper.pol_dens_err] = maybe_missing_err(setup.polymer_density)
         
         # polymer mass
-        sheet[GSAHelper.pol_mass] = measurement(setup.polymer_mass).val
-        sheet[GSAHelper.pol_mass_err] = measurement(setup.polymer_mass).err
+        sheet[GSAHelper.pol_mass] = maybe_missing_val(setup.polymer_mass)
+        sheet[GSAHelper.pol_mass_err] = maybe_missing_err(setup.polymer_mass)
 
         # polymer name
         sheet[GSAHelper.pol_name] = setup.polymer_name
@@ -554,25 +566,14 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
 
         # beads
         sheet[GSAHelper.nb] = setup.n_beads
-        sheet[GSAHelper.nb_vol] = measurement(setup.vol_bead).val
-        sheet[GSAHelper.nb_vol_err] = measurement(setup.vol_bead).err
+        sheet[GSAHelper.nb_vol] = maybe_missing_val(setup.vol_bead)
+        sheet[GSAHelper.nb_vol_err] = maybe_missing_err(setup.vol_bead)
 
         # aluminum mesh
-        sheet[GSAHelper.mesh_mass] = measurement(setup.mesh_mass).val
-        sheet[GSAHelper.mesh_mass_err] = measurement(setup.mesh_mass).err
-        sheet[GSAHelper.alum_dens] = measurement(setup.alum_dens).val
-        sheet[GSAHelper.alum_dens_err] = measurement(setup.alum_dens).err                                 
-
-
-        # add default values upon sheet creation
-        sheet[GSAHelper.omega_err], sheet[GSAHelper.pc_err], sheet[GSAHelper.tc_err], sheet[GSAHelper.mw_err] = 0, 0, 0, 0
-
-        sheet[GSAHelper.alum_dens] = 2.71; sheet[GSAHelper.alum_dens_err] = 0.00
-        
-        sheet[GSAHelper.pres_apparatus_err] = 0.0005
-        
-        sheet[GSAHelper.nb], sheet[GSAHelper.nb_vol], sheet[GSAHelper.nb_vol_err] = 0, 0.13399839, 0
-        sheet[GSAHelper.mesh_mass], sheet[GSAHelper.mesh_mass_err] = 0, 0
+        sheet[GSAHelper.mesh_mass] = maybe_missing_val(setup.mesh_mass)
+        sheet[GSAHelper.mesh_mass_err] = maybe_missing_err(setup.mesh_mass)
+        sheet[GSAHelper.alum_dens] = maybe_missing_val(setup.alum_dens)
+        sheet[GSAHelper.alum_dens_err] = maybe_missing_err(setup.alum_dens)                                 
 
 
     end
