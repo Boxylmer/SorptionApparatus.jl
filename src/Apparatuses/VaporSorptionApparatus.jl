@@ -487,7 +487,7 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
         sheet[VSAHelper.gab_k_val], sheet[VSAHelper.gab_k_err] = gmmodel.k.val, gmmodel.k.err
         sheet[VSAHelper.gab_a_val], sheet[VSAHelper.gab_a_err] = gmmodel.a.val, gmmodel.a.err
 
-        gmpredictions = predict_concentration(gmmodel, system.activities)
+        gmpredictions = a_predict_concentration(gmmodel, system.activities)
         sheet[VSAHelper.gab_predictions_start, dim=1] = [gm.val for gm in gmpredictions]
         sheet[VSAHelper.gab_predictions_err_start, dim=1] = [gm.err for gm in gmpredictions]
 
