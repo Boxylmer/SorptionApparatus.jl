@@ -516,7 +516,7 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
         sheet[GSAHelper.t_err] = maybe_missing_err(setup.temperature)
 
         # add step pressures
-        sheet[GSAHelper.step_start, dim=1] = collect(1:length(setup.num_steps))
+        sheet[GSAHelper.step_start, dim=1] = collect(1:setup.num_steps)
         sheet[GSAHelper.p_ch_in_start, dim=1] = strip_measurement_to_value(setup.charge_chamber_initial_pressures) 
         sheet[GSAHelper.p_ch_fin_start, dim=1] = strip_measurement_to_value(setup.charge_chamber_final_pressures) 
         sheet[GSAHelper.p_samp_start, dim=1] = strip_measurement_to_value(setup.sampling_chamber_final_pressures)
