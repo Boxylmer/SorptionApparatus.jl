@@ -24,7 +24,6 @@ struct GasSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PTC, PPC, PO, PMW, PD, PM
     vol_bead::VB                                        # 
     mesh_mass::MM                                       # 
     alum_dens::AD                                       # 
-    # transient_sorption_setup::TSS  
 end
 
 GasSorptionSetup(path::AbstractString) = readtemplate(GasSorptionApparatus(), path)
@@ -34,8 +33,6 @@ struct GasSorptionSystem{GSS, MSAS, ISO, MVT}
     moles_sorbed_at_step::AbstractVector{MSAS}
     isotherm::ISO
     molar_volumes::MVT
-
-    # transient_system::TSS
 end 
 
 function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer, model::MembraneEOS.CubicModel; transient_pressure=nothing)
