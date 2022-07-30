@@ -32,10 +32,7 @@ GasSorptionSetup(path::AbstractString) = readtemplate(GasSorptionApparatus(), pa
 struct GasSorptionSystem{GSS, MSAS, ISO}
     setup::GSS  # need to fix with actual GasSorptionSystem type todo
     moles_sorbed_at_step::AbstractVector{MSAS}
-    # model::MembraneEOS.CubicModel
     isotherm::ISO
-
-    # transient_system::TSS
 end 
 
 function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer, model::MembraneEOS.CubicModel; transient_pressure=nothing)
