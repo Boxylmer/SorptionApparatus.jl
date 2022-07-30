@@ -29,10 +29,13 @@ end
 
 GasSorptionSetup(path::AbstractString) = readtemplate(GasSorptionApparatus(), path)
 
-struct GasSorptionSystem{GSS, MSAS, ISO}
+struct GasSorptionSystem{GSS, MSAS, ISO, MVT}
     setup::GSS  # need to fix with actual GasSorptionSystem type todo
     moles_sorbed_at_step::AbstractVector{MSAS}
     isotherm::ISO
+    molar_volumes::MVT
+
+    # transient_system::TSS
 end 
 
 function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer, model::MembraneEOS.CubicModel; transient_pressure=nothing)
@@ -83,23 +86,18 @@ function GasSorptionSystem(gss::GasSorptionSetup)
     nps_at_each_step = [moles_sorbed_during_step(gss, i, model) for i in 1:gss.num_steps]
     nps = [sum(nps_at_each_step[1:i]) for i in 1:gss.num_steps]
     concs = [nps[i] / gss.polymer_mass * MembraneBase.CC_PER_MOL_STP * gss.polymer_density for i in 1:gss.num_steps]
-
+    
     # define what equilibrium pressures are
     final_pressures = gss.sampling_chamber_final_pressures * MembraneBase.MPA_PER_PA
-
+    molar_volumes = [volume(model, pres_mpa * MembraneBase.ATM_PER_MPA, gss.temperature) for pres_mpa in final_pressures]
     equilibrium_fugacities = [fugacity(model, pres ./ MembraneBase.MPA_PER_ATM, gss.temperature)[1] for pres in final_pressures] * MembraneBase.MPA_PER_ATM # MPa
-    # # handle transients if present
-    # if isnothing(gss.transient_sorption_setup)
-    #     transient_sorption_system = nothing
-    # else
-    #     transient_sorption_system = TransientSorptionSystem(gss.transient_sorption_setup)
-    # end
+
 
     # create an isotherm
     isotherm = IsothermData(
         partial_pressures_mpa=final_pressures, concentrations_cc=concs, fugacities_mpa=equilibrium_fugacities, 
         temperature_k=gss.temperature, rho_pol_g_cm3=gss.polymer_density, pen_mws_g_mol=gss.pen_mw)
-    system = GasSorptionSystem(gss, nps, isotherm)
+    system = GasSorptionSystem(gss, nps, isotherm, molar_volumes)
     return system
 end
 
@@ -152,8 +150,9 @@ module GSAHelper
     const conc_result_header, conc_result_err_header, conc_result_start, conc_result_err_start = "H11", "I11", "H12", "I12"
     const conc_result_g_g_header, conc_result_g_g_err_header, conc_result_g_g_start, conc_result_g_g_err_start = "J11", "K11", "J12", "K12"
     const fug_result_header, fug_result_err_header, fug_result_start, fug_result_err_start = "L11", "M11", "L12", "M12"
-    const mass_frac_result_header, mass_frac_result_err_header, mass_frac_result_start, mass_frac_result_err_start = "N11", "O11", "N12", "O12"
-    const dual_mode_predictions_header, dual_mode_predictions_err_header, dual_mode_predictions_start, dual_mode_predictions_err_start = "P11", "Q11", "P12", "Q12"
+    const molar_vol_result_header, molar_vol_result_err_header, molar_vol_result_start, molar_vol_result_err_start = "N11", "O11", "N12", "O12"
+    const mass_frac_result_header, mass_frac_result_err_header, mass_frac_result_start, mass_frac_result_err_start = "P11", "Q11", "P12", "Q12"
+    const dual_mode_predictions_header, dual_mode_predictions_err_header, dual_mode_predictions_start, dual_mode_predictions_err_start = "R11", "S11", "R12", "S12"
 
     function add_headers_to_sheet(sheet)
         # input headers
@@ -192,9 +191,10 @@ module GSAHelper
         sheet[GSAHelper.conc_result_header], sheet[GSAHelper.conc_result_err_header] = "Concentration (CC(STP)/CC(Pol))", "Conc. err (CC(STP)/CC(Pol))"
         sheet[GSAHelper.conc_result_g_g_header], sheet[GSAHelper.conc_result_g_g_err_header] = "Concentration (g/g(Pol))", "Conc. err (g/g(Pol))"
         sheet[GSAHelper.fug_result_header], sheet[GSAHelper.fug_result_err_header] = "Fugacity (MPa)", "Fug. err (MPa)"
+        sheet[GSAHelper.molar_vol_result_header], sheet[GSAHelper.molar_vol_result_err_header] = "Molar Vol (L/mol)", "M. Vol. err (L/mol)"
         sheet[GSAHelper.mass_frac_result_header], sheet[GSAHelper.mass_frac_result_err_header] = "Mass frac.", "Mass frac. err"
         sheet[GSAHelper.dual_mode_predictions_header], sheet[GSAHelper.dual_mode_predictions_err_header] = "Dual Mode Pred (CC/CC)", "Dual Mode Pred Err (CC/CC)"
-        
+
     end
 
  
@@ -457,6 +457,8 @@ function processtemplate(::GasSorptionApparatus, template_path::String, results_
         sheet[GSAHelper.conc_result_g_g_err_start, dim=1] = [c.err for c in concentration(isotherm; component=1, gas_units=:g, pol_units=:g)]
         sheet[GSAHelper.fug_result_start, dim=1] = [f.val for f in fugacities(isotherm; component=1)]
         sheet[GSAHelper.fug_result_err_start, dim=1] = [f.err for f in fugacities(isotherm; component=1)]
+        sheet[GSAHelper.molar_vol_result_start, dim=1] = [molar_vol.val for molar_vol in system.molar_volumes]
+        sheet[GSAHelper.molar_vol_result_err_start, dim=1] = [molar_vol.err for molar_vol in system.molar_volumes]
         sheet[GSAHelper.mass_frac_result_start, dim=1] = [mf.val for mf in penetrant_mass_fractions(isotherm; component=1)]
         sheet[GSAHelper.mass_frac_result_err_start, dim=1] = [mf.err for mf in penetrant_mass_fractions(isotherm; component=1)]
 
@@ -513,7 +515,7 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
         sheet[GSAHelper.t_err] = maybe_missing_err(setup.temperature)
 
         # add step pressures
-        sheet[GSAHelper.step_start, dim=1] = collect(1:length(setup.num_steps))
+        sheet[GSAHelper.step_start, dim=1] = collect(1:setup.num_steps)
         sheet[GSAHelper.p_ch_in_start, dim=1] = strip_measurement_to_value(setup.charge_chamber_initial_pressures) 
         sheet[GSAHelper.p_ch_fin_start, dim=1] = strip_measurement_to_value(setup.charge_chamber_final_pressures) 
         sheet[GSAHelper.p_samp_start, dim=1] = strip_measurement_to_value(setup.sampling_chamber_final_pressures)
