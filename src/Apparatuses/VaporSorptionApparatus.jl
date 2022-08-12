@@ -27,12 +27,13 @@ end
 
 VaporSorptionSetup(path::AbstractString) = readtemplate(VaporSorptionApparatus(), path)
 
-struct VaporSorptionSystem{VSS, MSAS, ISO, VP, A, TSS}
+struct VaporSorptionSystem{VSS, MSAS, ISO, VP, A, TFT, TSS}
     setup::VSS  # need to fix with actual VaporSorptionSystem type
     moles_sorbed_at_step::Vector{MSAS}
     isotherm::ISO
     vapor_pressure::VP
     activities::A
+    thermo_factor_analysis::TFT
     transient_system::TSS
 end # end VaporSorptionSystem
 
@@ -103,6 +104,9 @@ function VaporSorptionSystem(vss::VaporSorptionSetup)
         pen_mws_g_mol=[vss.pen_mw], rho_pol_g_cm3=vss.polymer_density
     )
 
+    # calculate the thermodynamic factors
+    tfa = ThermodynamicFactorAnalysis(isotherm)
+
     # deal with transients
     if isnothing(vss.transient_sorption_setup)
         transient_sorption_system = nothing
@@ -111,7 +115,7 @@ function VaporSorptionSystem(vss::VaporSorptionSetup)
     end
         
     # construct the system struct
-    system = VaporSorptionSystem(vss, nps, isotherm, vap_pres, activities, transient_sorption_system)
+    system = VaporSorptionSystem(vss, nps, isotherm, vap_pres, activities, tfa, transient_sorption_system)
     return system
 end
 
@@ -165,6 +169,8 @@ module VSAHelper
     const mass_frac_result_header, mass_frac_result_err_header, mass_frac_result_start, mass_frac_result_err_start = "N11", "O11", "N12", "O12" # todo include mass fracs (ctrl+f the vars)
     const dual_mode_predictions_header, dual_mode_predictions_err_header, dual_mode_predictions_start, dual_mode_predictions_err_start = "P11", "Q11", "P12", "Q12"
     const gab_predictions_header, gab_predictions_err_header, gab_predictions_start, gab_predictions_err_start = "R11", "S11", "R12", "S12"
+    const thermo_factor_header, thermo_factor_err_header, thermo_factor_start, thermo_factor_err_start = "T11", "U11", "T12", "U12"
+
 
     # parameters output
     const param_header, param_result_header, param_err_header, param_unit_header = "G1", "H1", "I1", "J1"
@@ -192,10 +198,11 @@ module VSAHelper
         sheet[VSAHelper.dual_mode_predictions_header], sheet[VSAHelper.dual_mode_predictions_err_header] = "Dual Mode Pred (CC/CC)", "Dual Mode Pred Err (CC/CC)"
                 # gab
         sheet[VSAHelper.gab_predictions_header], sheet[VSAHelper.gab_predictions_err_header] = "GAB Pred (CC/CC)", "GAB Pred Err (CC/CC)"
+        sheet[VSAHelper.thermo_factor_header], sheet[VSAHelper.thermo_factor_err_header] = "Thermodynamic Factor α", "α err"
         sheet[VSAHelper.gab_cp_header], sheet[VSAHelper.gab_cp_val], sheet[VSAHelper.gab_cp_err], sheet[VSAHelper.gab_cp_units] = "GAB (Cp)", "calculated", "calculated", "(CC/CC)"
         sheet[VSAHelper.gab_k_header], sheet[VSAHelper.gab_k_val], sheet[VSAHelper.gab_k_err], sheet[VSAHelper.gab_k_units] = "GAB (k)", "calculated", "calculated", "Unitless"
         sheet[VSAHelper.gab_a_header], sheet[VSAHelper.gab_a_val], sheet[VSAHelper.gab_a_err], sheet[VSAHelper.gab_a_units] = "GAB (a)", "calculated", "calculated", "Unitless"
-        
+
     end
 
     # Error analysis locations and data
@@ -493,6 +500,12 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
         gmpredictions = a_predict_concentration(gmmodel, system.activities)
         sheet[VSAHelper.gab_predictions_start, dim=1] = [gm.val for gm in gmpredictions]
         sheet[VSAHelper.gab_predictions_err_start, dim=1] = [gm.err for gm in gmpredictions]
+
+        # α factor
+
+        αs = measurement.(system.thermo_factor_analysis.thermodynamic_factors)
+        sheet[VSAHelper.thermo_factor_start, dim=1] = [α.val for α in αs]
+        sheet[VSAHelper.thermo_factor_err_start, dim=1] = [α.err for α in αs]
 
         # write error analysis 
         write_error_analysis(VaporSorptionApparatus(), system, xf)
