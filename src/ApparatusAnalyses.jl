@@ -81,6 +81,8 @@ function write_kinetic_analysis(excel_file, iso::IsothermData, transient_system:
     
     if isnothing(transient_system)
         throw(MissingException("No transient system")) 
+
+        # todo if you want to write a 
     end
 
     semi_thickness_cm = transient_system.semi_thickness_cm

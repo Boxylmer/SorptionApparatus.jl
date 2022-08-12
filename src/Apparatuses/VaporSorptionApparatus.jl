@@ -402,8 +402,11 @@ function readtemplate(::VaporSorptionApparatus, path::String)  # read a template
     _final_system_pressures = chop_vector_at_first_missing_value(pressure_info_matrix[:, VSAHelper.p_sys_fin_col])
     _final_charge_pressures = chop_vector_at_first_missing_value(pressure_info_matrix[:, VSAHelper.p_ch_fin_col])
     
-        # ensure chopped steps are of the correct length
-    if !(length(_initial_system_pressures) == length(_final_system_pressures) == length(_final_charge_pressures))
+    # ensure chopped steps are of the correct length
+    n_isp = length(_initial_system_pressures)
+    n_fsp = length(_final_system_pressures)
+    n_fcp = length(_final_charge_pressures)
+    if !((n_isp == n_fsp) && (n_isp == n_fcp || n_isp == n_fcp + 1))
         throw(MissingException("The number of steps specified didn't match up. 
         Was a value left blank, or was the sheet shifted away from the expected step start point?: " * VSAHelper.step_start *"?"))
     end  
