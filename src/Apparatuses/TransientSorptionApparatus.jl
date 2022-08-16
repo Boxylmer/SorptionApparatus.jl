@@ -447,7 +447,11 @@ function is_template_valid(::TransientSorptionApparatus, args...; kwargs..., ver
         readtemplate(TransientSorptionApparatus(), args...; kwargs...)
         return true
     catch e
-        println(e)
+        if verbose
+            println("Could not read transient template, error displayed below: ")
+            println(e)
+            println()
+        end
         return false   
     end
 end
