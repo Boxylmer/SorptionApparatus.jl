@@ -25,7 +25,7 @@ struct VaporSorptionSetup{T, CCIP, CCFP, SCFP, CCV, SCV, PMW, AA, AB, AC, PD, PM
     penetrant_liquid_phase_molar_volume::PLQMVT
 end
 
-VaporSorptionSetup(path::AbstractString) = readtemplate(VaporSorptionApparatus(), path)
+VaporSorptionSetup(path::AbstractString; verbose=false) = readtemplate(VaporSorptionApparatus(), path; verbose)
 
 struct VaporSorptionSystem{VSS, MSAS, ISO, VP, A, TFT, TSS}
     setup::VSS  # need to fix with actual VaporSorptionSystem type
@@ -37,8 +37,8 @@ struct VaporSorptionSystem{VSS, MSAS, ISO, VP, A, TFT, TSS}
     transient_system::TSS
 end # end VaporSorptionSystem
 
-function VaporSorptionSystem(template_filepath::AbstractString)
-    vss = VaporSorptionSetup(template_filepath)
+function VaporSorptionSystem(template_filepath::AbstractString; verbose=false)
+    vss = VaporSorptionSetup(template_filepath; verbose=verbose)
     return VaporSorptionSystem(vss)
 end
 
@@ -84,7 +84,7 @@ function dimensionless_mass_sorbed_during_step(vss::VaporSorptionSetup, step::In
     return moles_sorbed_during_step(vss, step; transient_pressure) / equilibrium_moles_sorbed  # if you multiply both by molecular weight, they cancel out
 end
 
-function VaporSorptionSystem(vss::VaporSorptionSetup)
+function VaporSorptionSystem(vss::VaporSorptionSetup; )
     nps_at_each_step = [moles_sorbed_during_step(vss, i) for i in 1:vss.num_steps]
     nps = [sum(nps_at_each_step[1:i]) for i in 1:vss.num_steps]
     concs = [nps[i] / vss.polymer_mass * MembraneBase.CC_PER_MOL_STP * vss.polymer_density for i in 1:vss.num_steps]
@@ -372,7 +372,7 @@ function generatetemplate(::VaporSorptionApparatus, filepath = VSAHelper.default
     return nothing
 end
 
-function readtemplate(::VaporSorptionApparatus, path::String)  # read a template into a sorption setup struct
+function readtemplate(::VaporSorptionApparatus, path::String; verbose=false)  # read a template into a sorption setup struct
     xf = XLSX.readxlsx(path)
     sheet = xf[VSAHelper.default_sheet_title]
     
@@ -432,7 +432,7 @@ function readtemplate(::VaporSorptionApparatus, path::String)  # read a template
         _antoine_a, _antoine_b, _antoine_c, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nbeads, _vbead, transient_sorption_setup,
         nothing) 
     
-    if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
+    if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup, verbose=verbose)
         transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
     end
 
@@ -450,9 +450,9 @@ function readtemplate(::VaporSorptionApparatus, path::String)  # read a template
     return setup
 end
 
-function processtemplate(::VaporSorptionApparatus, template_path::String, results_path::Union{String, Nothing}; sheet_name=VSAHelper.default_sheet_title, overwrite=false)  # read a template and write it out with options
+function processtemplate(::VaporSorptionApparatus, template_path::String, results_path::Union{String, Nothing}; sheet_name=VSAHelper.default_sheet_title, overwrite=false, verbose=false)  # read a template and write it out with options
     # load and calculate the system
-    system = VaporSorptionSystem(template_path)
+    system = VaporSorptionSystem(template_path; verbose=verbose)
     if isnothing(results_path) return system end 
     isotherm = system.isotherm
 

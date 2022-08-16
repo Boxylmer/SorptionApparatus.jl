@@ -24,7 +24,7 @@ using Revise
         VaporSorptionApparatus(),
         joinpath(@__DIR__, "test_templates", "H2O 5% Crown Ether 25C.xlsx"),
         joinpath(@__DIR__, "template_results", "H2O 5% Crown Ether 25C.xlsx"),
-        overwrite=true
+        overwrite=true, verbose=true
     )
 
 

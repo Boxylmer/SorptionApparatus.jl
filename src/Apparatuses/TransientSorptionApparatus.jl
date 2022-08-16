@@ -442,11 +442,12 @@ function processtemplate(::TransientSorptionApparatus, template_path::String; kw
     return processtemplate(TransientSorptionApparatus(), template_path, nothing; kwargs...)
 end
 
-function is_template_valid(::TransientSorptionApparatus, args...; kwargs...)  # super duper inefficient, but should be "foolproof" in that it just reads the template into a setup
+function is_template_valid(::TransientSorptionApparatus, args...; kwargs..., verbose=false)  # super duper inefficient, but should be "foolproof" in that it just reads the template into a setup
     try 
         readtemplate(TransientSorptionApparatus(), args...; kwargs...)
         return true
-    catch
+    catch e
+        println(e)
         return false   
     end
 end
