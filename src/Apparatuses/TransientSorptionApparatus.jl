@@ -448,8 +448,7 @@ function is_template_valid(::TransientSorptionApparatus, args...; verbose=false,
         return true
     catch e
         if verbose
-            println("Could not read transient template, error displayed below: ")
-            println(e)
+            @error "Could not read transient template, error displayed below: " exception=(e, catch_backtrace())
             println()
         end
         return false   
