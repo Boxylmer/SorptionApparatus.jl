@@ -471,18 +471,6 @@ function processtemplate(::GasSorptionApparatus, template_path::String, results_
 
         # write error analysis 
         write_error_analysis(GasSorptionApparatus(), system, xf)
-
-        # if !isnothing(system.transient_system)
-        #     write_transient_sorption_system_to_sheet(
-        #         system.transient_system, 
-        #         xf[TSAHelper.default_sheet_name] 
-        #     )
-            
-        #     # write_kinetic_analysis(xf, isotherm, system.transient_system) # need to #todo implement fugacity in the kinetic analysis
-        # else
-        #     # println("Not running combined apparatus as no transient data was present")
-        # end
-
     end
 
     return system
