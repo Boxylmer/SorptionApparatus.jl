@@ -16,6 +16,14 @@ using Revise
         overwrite=true, verbose=true
     ) 
     
+    println("Processing: methanol_template_with_transients.xlsx, but skipping the transients")
+    vapor_system = processtemplate(
+        VaporSorptionApparatus(), 
+        joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
+        joinpath(@__DIR__, "template_results", "methanol_results_with_transients_skipped.xlsx");
+        overwrite=true, verbose=true
+    ) 
+
     @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
 
     # run a template with fewer transient steps than sorption steps
