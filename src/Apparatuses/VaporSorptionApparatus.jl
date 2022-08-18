@@ -39,7 +39,7 @@ end # end VaporSorptionSystem
 
 function VaporSorptionSystem(template_filepath::AbstractString; verbose=false)
     vss = VaporSorptionSetup(template_filepath; verbose=verbose)
-    return VaporSorptionSystem(vss)
+    return VaporSorptionSystem(vss; verbose=verbose)
 end
 
 """
@@ -84,7 +84,7 @@ function dimensionless_mass_sorbed_during_step(vss::VaporSorptionSetup, step::In
     return moles_sorbed_during_step(vss, step; transient_pressure) / equilibrium_moles_sorbed  # if you multiply both by molecular weight, they cancel out
 end
 
-function VaporSorptionSystem(vss::VaporSorptionSetup; )
+function VaporSorptionSystem(vss::VaporSorptionSetup; verbose=false)
     nps_at_each_step = [moles_sorbed_during_step(vss, i) for i in 1:vss.num_steps]
     nps = [sum(nps_at_each_step[1:i]) for i in 1:vss.num_steps]
     concs = [nps[i] / vss.polymer_mass * MembraneBase.CC_PER_MOL_STP * vss.polymer_density for i in 1:vss.num_steps]
@@ -111,7 +111,7 @@ function VaporSorptionSystem(vss::VaporSorptionSetup; )
     if isnothing(vss.transient_sorption_setup)
         transient_sorption_system = nothing
     else
-        transient_sorption_system = TransientSorptionSystem(vss.transient_sorption_setup)
+        transient_sorption_system = TransientSorptionSystem(vss.transient_sorption_setup; verbose=verbose)
     end
         
     # construct the system struct

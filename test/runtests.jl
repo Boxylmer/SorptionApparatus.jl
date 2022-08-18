@@ -13,7 +13,7 @@ using Revise
         VaporSorptionApparatus(), 
         joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
         joinpath(@__DIR__, "template_results", "methanol_results_with_transients.xlsx"); 
-        overwrite=true
+        overwrite=true, verbose=true
     ) 
     
     @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
@@ -26,8 +26,7 @@ using Revise
         joinpath(@__DIR__, "template_results", "H2O 5% Crown Ether 25C.xlsx"),
         overwrite=true, verbose=true
     )
-
-
+    return
     # Gas Sorption Apparatus
     generated_gas_template_path = joinpath(@__DIR__, "template_results", "generated gas template (empty).xlsx")
     tpbo_75_co2_27c_template_path = joinpath(@__DIR__, "test_templates", "TPBO-0.75_CO2_27C.xlsx")

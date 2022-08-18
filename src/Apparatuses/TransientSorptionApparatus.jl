@@ -330,15 +330,16 @@ function readtemplate(::TransientSorptionApparatus, path::String; sheet_name=TSA
 
         time_colidx = start_col + TSAHelper.relative_input_time_col
         sorption_colidx = start_col + TSAHelper.relative_input_dimless_sorption_col
-        
-        time_vector = convert(Array{Float64}, XLSX.gettable(
-            sheet, XLSX.ColumnRange(time_colidx, time_colidx); first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
-            )[1][1])
 
-        dimensionless_sorption_or_pressure_vector = convert(Array{Float64},XLSX.gettable(
-            sheet, XLSX.ColumnRange(sorption_colidx, sorption_colidx); first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
-            )[1][1])
-            
+        time_vector = Float64.(XLSX.gettable(
+            sheet, XLSX.ColumnRange(time_colidx, time_colidx); 
+            first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
+            ).data[1])
+
+        dimensionless_sorption_or_pressure_vector = Float64.(XLSX.gettable(
+            sheet, XLSX.ColumnRange(sorption_colidx, sorption_colidx); 
+            first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
+            ).data[1])
         if is_in_transient_pressure_mode
             pressure_vector = dimensionless_sorption_or_pressure_vector
             equilibrium_moles_sorbed = moles_sorbed_during_step(apparatus_setup, step_idx)

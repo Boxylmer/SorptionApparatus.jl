@@ -4,6 +4,7 @@ module SorptionApparatus
     using SorptionModels
     using XLSX
     using Measurements
+    using ProgressMeter
 
     include(joinpath("Apparatuses", "ApparatusFuncs.jl"))
     export generatetemplate
