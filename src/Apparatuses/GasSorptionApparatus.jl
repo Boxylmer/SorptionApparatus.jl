@@ -28,8 +28,8 @@ end
 
 GasSorptionSetup(path::AbstractString) = readtemplate(GasSorptionApparatus(), path)
 
-struct GasSorptionSystem{GSS, MSAS, ISO, MVT}
-    setup::GSS  # need to fix with actual GasSorptionSystem type todo
+struct GasSorptionSystem{MSAS, ISO, MVT}
+    setup::GasSorptionSetup
     moles_sorbed_at_step::AbstractVector{MSAS}
     isotherm::ISO
     molar_volumes::MVT
@@ -181,7 +181,7 @@ module GSAHelper
         sheet[GSAHelper.dual_mode_ch_header], sheet[GSAHelper.dual_mode_ch_val], sheet[GSAHelper.dual_mode_ch_err], sheet[GSAHelper.dual_mode_ch_units] = "Dual Mode (CH')", "calculated", "calculated", "(CC/CC)"
         sheet[GSAHelper.dual_mode_b_header], sheet[GSAHelper.dual_mode_b_val], sheet[GSAHelper.dual_mode_b_err], sheet[GSAHelper.dual_mode_b_units] = "Dual Mode (b)", "calculated", "calculated", "1 / MPa"
         sheet[GSAHelper.dual_mode_kd_header], sheet[GSAHelper.dual_mode_kd_val], sheet[GSAHelper.dual_mode_kd_err], sheet[GSAHelper.dual_mode_kd_units] = "Dual Mode (kd)", "calculated", "calculated", "(CC/CC) / MPa"
-            # todo NELF
+            
         
         # result headers
         sheet[GSAHelper.pres_result_header], sheet[GSAHelper.pres_result_err_header] = "Pressure (MPa)", "Pres. err (MPa)"
@@ -326,7 +326,7 @@ function write_error_analysis(::GasSorptionApparatus, system::GasSorptionSystem,
 end
 
 function generatetemplate(::GasSorptionApparatus, filepath = GSAHelper.default_file_name)
-    XLSX.openxlsx(filepath, mode="w") do xf
+    XLSX.openxlsx(filepath, mode="w"; enable_cache=false) do xf
         sheet = xf[1]
         XLSX.rename!(sheet, GSAHelper.default_sheet_title)
         
@@ -345,8 +345,6 @@ function generatetemplate(::GasSorptionApparatus, filepath = GSAHelper.default_f
         sheet[GSAHelper.nb], sheet[GSAHelper.nb_vol], sheet[GSAHelper.nb_vol_err] = 0, 0.13399839, 0
         sheet[GSAHelper.mesh_mass], sheet[GSAHelper.mesh_mass_err] = 0, 0
 
-        # sheet[GSAHelper.vs], sheet[GSAHelper.vs_err] = 15.707, 0.06 # todo add values
-        # sheet[GSAHelper.vc], sheet[GSAHelper.vc_err] = 18.442, 0.04
 
     end 
     # # add transient template
@@ -396,7 +394,6 @@ function readtemplate(::GasSorptionApparatus, path::AbstractString; verify::Bool
     _final_sampling_pressure = chop_vector_at_first_missing_value(pressure_info_matrix[:, GSAHelper.p_samp_col])
     
     # ensure chopped steps are of the correct length
-    # TODO: verify that we will always need information at every step, etc
     if verify
         if !(length(_initial_charge_pressures) == length(_final_charge_pressures) == length(_final_sampling_pressure))
             throw(MissingException("The number of steps specified didn't match up. 
@@ -473,10 +470,11 @@ end
 
 function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false)
     if !overwrite
+
         # todo check if file exists, error if it does
     end
 
-    XLSX.openxlsx(filepath, mode="w") do xf
+    XLSX.openxlsx(filepath, mode="w"; enable_cache=false) do xf
         sheet = xf[1]
         XLSX.rename!(sheet, GSAHelper.default_sheet_title)
         
@@ -533,10 +531,7 @@ function savetemplate(setup::GasSorptionSetup, filepath::String, overwrite=false
         sheet[GSAHelper.pol_mass_err] = maybe_missing_err(setup.polymer_mass)
 
         # polymer name
-        sheet[GSAHelper.pol_name] = setup.polymer_name
-            
-        # num_steps::Int64 # this should be the number of *complete* steps
-        # todo not really sure if this is needed yet         
+        sheet[GSAHelper.pol_name] = setup.polymer_name         
 
         # beads
         sheet[GSAHelper.nb] = setup.n_beads

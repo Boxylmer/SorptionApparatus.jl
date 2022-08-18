@@ -38,7 +38,7 @@ struct VaporSorptionSystem{VSS, MSAS, ISO, VP, A, TFT, TSS}
 end # end VaporSorptionSystem
 
 function VaporSorptionSystem(template_filepath::AbstractString; verbose=false, skip_transients=skip_transients)
-    vss = VaporSorptionSetup(template_filepath; verbose=verbose, skip_transients=skip_transients)
+    vss = VaporSorptionSetup(template_filepath; skip_transients=skip_transients)
     return VaporSorptionSystem(vss; verbose=verbose)
 end
 
@@ -319,7 +319,7 @@ end
 
 # generate, read, and process (read, evaluate, and write) templates
 function generatetemplate(::VaporSorptionApparatus, filepath = VSAHelper.default_file_name)
-    XLSX.openxlsx(filepath, mode="w") do xf
+    XLSX.openxlsx(filepath, mode="w"; enable_cache=false) do xf
         sheet = xf[1]
         XLSX.rename!(sheet, VSAHelper.default_sheet_title)
         sheet[VSAHelper.overall_header] = "Overall Properties"; sheet[VSAHelper.overall_val] = "Value"; sheet[VSAHelper.overall_err] = "Uncertainty"
@@ -372,7 +372,7 @@ function generatetemplate(::VaporSorptionApparatus, filepath = VSAHelper.default
     return nothing
 end
 
-function readtemplate(::VaporSorptionApparatus, path::String; verbose=false, skip_transients=false)  # read a template into a sorption setup struct
+function readtemplate(::VaporSorptionApparatus, path::String; skip_transients=false)  # read a template into a sorption setup struct
     xf = XLSX.readxlsx(path)
     sheet = xf[VSAHelper.default_sheet_title]
     
@@ -417,8 +417,7 @@ function readtemplate(::VaporSorptionApparatus, path::String; verbose=false, ski
         throw(MissingException("The number of steps specified didn't match up. 
         Was a value left blank, or was the sheet shifted away from the expected step start point?: " * VSAHelper.step_start *"?"))
     end  
-    # todo possibly there will not need to be a final step pressure for the final sampling pressure, so it could also be (length-1)
-
+ 
     _initial_system_pressures = add_uncertainty_to_values(_initial_system_pressures, _p_err)
     _final_system_pressures = add_uncertainty_to_values(_final_system_pressures, _p_err)
     _final_charge_pressures = add_uncertainty_to_values(_final_charge_pressures, _p_err)
@@ -432,9 +431,8 @@ function readtemplate(::VaporSorptionApparatus, path::String; verbose=false, ski
         _antoine_a, _antoine_b, _antoine_c, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nbeads, _vbead, transient_sorption_setup,
         nothing) 
     
-    # if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup, verbose=verbose) 
     if has_template(TransientSorptionApparatus(), xf) && !skip_transients
-        transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)  # todo make a function to take an already loaded xf file rather than only a path, which means this is loaded twice 
+        transient_sorption_setup = readtemplate(TransientSorptionApparatus(), xf; apparatus_setup=temporary_setup) 
     end
 
     if ismissing(sheet[VSAHelper.liq_phase_mol_vol_val])

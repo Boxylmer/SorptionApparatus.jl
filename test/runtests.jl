@@ -1,7 +1,7 @@
+using Revise
 using SorptionApparatus
 using MembraneBase
 using Test
-using Revise
 
 @testset "SorptionApparatus.jl" begin
     # Vapor Sorption Apparatus
@@ -24,11 +24,11 @@ using Revise
         overwrite=true, verbose=true
     ) 
 
-    println("Processing: H2O neat 35C.xlsx, which caused loading errors")
-    processtemplate(
-        VaporSorptionApparatus(), 
-        joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"), verbose=true
-    ) 
+    # println("Processing: H2O neat 35C.xlsx, which caused loading errors")
+    # processtemplate(
+    #     VaporSorptionApparatus(), 
+    #     joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"), verbose=true
+    # ) 
 
     @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
 
@@ -40,7 +40,7 @@ using Revise
         joinpath(@__DIR__, "template_results", "H2O 5% Crown Ether 25C.xlsx"),
         overwrite=true, verbose=true
     )
-    return
+
     # Gas Sorption Apparatus
     generated_gas_template_path = joinpath(@__DIR__, "template_results", "generated gas template (empty).xlsx")
     tpbo_75_co2_27c_template_path = joinpath(@__DIR__, "test_templates", "TPBO-0.75_CO2_27C.xlsx")

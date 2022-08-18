@@ -294,8 +294,12 @@ function generatetemplate(::TransientSorptionApparatus, filepath=TSAHelper.defau
     return nothing
 end
 
-function readtemplate(::TransientSorptionApparatus, path::String; sheet_name=TSAHelper.default_sheet_name, apparatus_setup=nothing)  # read a template into a sorption setup struct
+function readtemplate(::TransientSorptionApparatus, path::String; kwargs...)
     xf = XLSX.readxlsx(path)
+    return readtemplate(TransientSorptionApparatus(), xf; kwargs...)
+end
+
+function readtemplate(::TransientSorptionApparatus, xf::XLSX.XLSXFile; sheet_name=TSAHelper.default_sheet_name, apparatus_setup=nothing)  # read a template into a sorption setup struct
     sheet = xf[sheet_name]
     
     num_steps = sheet[TSAHelper.num_steps_value] 
@@ -433,7 +437,7 @@ function processtemplate(::TransientSorptionApparatus, template_path::String, re
     cp(template_path, results_path; force=overwrite)
     
     # open the results file and start adding in the calculations done
-    XLSX.openxlsx(results_path, mode="rw") do xf
+    XLSX.openxlsx(results_path, mode="rw"; enable_cache=false) do xf
         sheet = xf[sheet_name]
             write_transient_sorption_system_to_sheet(system, sheet)
     end
@@ -442,7 +446,6 @@ end
 function processtemplate(::TransientSorptionApparatus, template_path::String; kwargs...)
     return processtemplate(TransientSorptionApparatus(), template_path, nothing; kwargs...)
 end
-
 
 function has_template(::TransientSorptionApparatus, wb_or_xf::Union{XLSX.Workbook, XLSX.XLSXFile})
     for name in XLSX.sheetnames(wb_or_xf)

@@ -81,8 +81,6 @@ function write_kinetic_analysis(excel_file, iso::IsothermData, transient_system:
     
     if isnothing(transient_system)
         throw(MissingException("No transient system")) 
-
-        # todo if you want to write a 
     end
 
     semi_thickness_cm = transient_system.semi_thickness_cm
@@ -105,8 +103,8 @@ function write_kinetic_analysis(excel_file, iso::IsothermData, transient_system:
     KiAnCo._write_deconvolved_diffusivity_table(sheet, mbh_deconvolution, iso, transient_system.mbh_diffusivities, current_row)
 end
 
-function write_kinetic_analysis(filepath::AbstractString, iso::IsothermData, transient_system::Union{TransientSorptionSystem, Nothing})  # todo untested
-    XLSX.openxlsx(filepath, mode="rw") do xf  
+function write_kinetic_analysis(filepath::AbstractString, iso::IsothermData, transient_system::Union{TransientSorptionSystem, Nothing})  
+    XLSX.openxlsx(filepath, mode="rw"; enable_cache=false) do xf  
         return write_kinetic_analysis(xf, iso, transient_system)
     end
 end
