@@ -410,16 +410,6 @@ function readtemplate(::GasSorptionApparatus, path::AbstractString; verify::Bool
      
     _nsteps = length(_initial_charge_pressures)
 
-    # transient_sorption_setup = nothing
-    
-    # # copy of the setup to add to the transient apparatus (it'll grab some of the data to convert pressures to dimensionless sorption)
-    # temporary_setup = GasSorptionSetup(_t, _initial_charge_pressures, _final_charge_pressures, _final_sampling_pressure, 
-    #     _vc, _vs, _penetrant, _model, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens, transient_sorption_setup) 
-        
-    # if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
-    #     transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
-    # end
-
     setup = GasSorptionSetup(_t, _initial_charge_pressures, _final_charge_pressures, _final_sampling_pressure, 
             _vc, _vs, _penetrant_name, _tc, _pc, _omega, _mw, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nb, _nb_vol, _mesh_mass, _alum_dens) 
     return setup

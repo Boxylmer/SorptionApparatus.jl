@@ -432,8 +432,9 @@ function readtemplate(::VaporSorptionApparatus, path::String; verbose=false, ski
         _antoine_a, _antoine_b, _antoine_c, _pol_dens, _pol_mass, _polymer_name, _nsteps, _nbeads, _vbead, transient_sorption_setup,
         nothing) 
     
-    if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup, verbose=verbose) && !skip_transients
-        transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)
+    # if is_template_valid(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup, verbose=verbose) 
+    if has_template(TransientSorptionApparatus(), xf) && !skip_transients
+        transient_sorption_setup = readtemplate(TransientSorptionApparatus(), path; apparatus_setup=temporary_setup)  # todo make a function to take an already loaded xf file rather than only a path, which means this is loaded twice 
     end
 
     if ismissing(sheet[VSAHelper.liq_phase_mol_vol_val])
@@ -458,7 +459,7 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
 
     # copy the template (this is the only time we will not force by default)
     if template_path == results_path
-        @warn("The vapor sorption template and results file paths were the same.")
+        @error("The vapor sorption template and results file paths were the same.")
         return # not really dealing with this behavior yet, it would directly modify the file
     end
     cp(template_path, results_path; force=overwrite)

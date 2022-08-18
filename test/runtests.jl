@@ -24,6 +24,12 @@ using Revise
         overwrite=true, verbose=true
     ) 
 
+    println("Processing: H2O neat 35C.xlsx, which caused loading errors")
+    processtemplate(
+        VaporSorptionApparatus(), 
+        joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"), verbose=true
+    ) 
+
     @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
 
     # run a template with fewer transient steps than sorption steps

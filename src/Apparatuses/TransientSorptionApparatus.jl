@@ -443,15 +443,12 @@ function processtemplate(::TransientSorptionApparatus, template_path::String; kw
     return processtemplate(TransientSorptionApparatus(), template_path, nothing; kwargs...)
 end
 
-function is_template_valid(::TransientSorptionApparatus, args...; verbose=false, kwargs...)  # super duper inefficient, but should be "foolproof" in that it just reads the template into a setup
-    try 
-        readtemplate(TransientSorptionApparatus(), args...; kwargs...)
-        return true
-    catch e
-        if verbose
-            @error "Could not read transient template, error displayed below: " exception=(e, catch_backtrace())
-            println()
+
+function has_template(::TransientSorptionApparatus, wb_or_xf::Union{XLSX.Workbook, XLSX.XLSXFile})
+    for name in XLSX.sheetnames(wb_or_xf)
+        if name == TSAHelper.default_sheet_name
+            return true
         end
-        return false   
-    end
+    end 
+    return false
 end
