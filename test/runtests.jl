@@ -21,14 +21,14 @@ using Test
         VaporSorptionApparatus(), 
         joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
         joinpath(@__DIR__, "template_results", "methanol_results_with_transients_skipped.xlsx");
-        overwrite=true, verbose=true
+        overwrite=true, verbose=true, skip_transients=true
     ) 
 
-    # println("Processing: H2O neat 35C.xlsx, which caused loading errors")
-    # processtemplate(
-    #     VaporSorptionApparatus(), 
-    #     joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"), verbose=true
-    # ) 
+    println("Processing: H2O neat 35C.xlsx, which caused loading errors")
+    processtemplate(
+        VaporSorptionApparatus(), 
+        joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"), verbose=true
+    ) 
 
     @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
 

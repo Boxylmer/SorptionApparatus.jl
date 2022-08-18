@@ -515,10 +515,7 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
                 system.transient_system, 
                 xf[TSAHelper.default_sheet_name] 
             )
-            
             write_kinetic_analysis(xf, isotherm, system.transient_system)
-        else
-            println("Not running combined apparatus as no transient data was present")
         end
 
         # deal with zimm-lundberg
