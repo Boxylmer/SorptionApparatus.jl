@@ -27,8 +27,16 @@ using Test
     println("Processing: H2O neat 35C.xlsx, which caused loading errors")
     processtemplate(
         VaporSorptionApparatus(), 
-        joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"), verbose=true
+        joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"),
+        joinpath(@__DIR__, "template_results", "H2O neat 35C.xlsx"),
+        overwrite=true, verbose=true
     ) 
+
+    println("Processing: H2O neat 25C.xlsx, which also caused loading errors")
+    @test processtemplate(
+        VaporSorptionApparatus(), 
+        joinpath(@__DIR__, "test_templates", "H2O neat 25C.xlsx"), verbose=true
+    ) <: VaporSorptionSystem  # if this passes, it might be beacuase not handing a second string doens't make it actually methanol_results_with_transients
 
     @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
 
