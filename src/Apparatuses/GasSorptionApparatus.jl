@@ -447,15 +447,20 @@ function processtemplate(::GasSorptionApparatus, template_path::String, results_
         sheet[GSAHelper.mass_frac_result_err_start, dim=1] = [mf.err for mf in penetrant_mass_fractions(isotherm; component=1)]
 
         # dual mode
-        dmmodel = fit_dualmode_model(isotherm; uncertainty_method=:JackKnife)
-        sheet[GSAHelper.dual_mode_ch_val], sheet[GSAHelper.dual_mode_ch_err] = dmmodel.ch.val, dmmodel.ch.err
-        sheet[GSAHelper.dual_mode_b_val], sheet[GSAHelper.dual_mode_b_err] = dmmodel.b.val, dmmodel.b.err
-        sheet[GSAHelper.dual_mode_kd_val], sheet[GSAHelper.dual_mode_kd_err] = dmmodel.kd.val, dmmodel.kd.err
+        try 
+            dmmodel = fit_dualmode_model(isotherm; uncertainty_method=:JackKnife)
+            sheet[GSAHelper.dual_mode_ch_val], sheet[GSAHelper.dual_mode_ch_err] = dmmodel.ch.val, dmmodel.ch.err
+            sheet[GSAHelper.dual_mode_b_val], sheet[GSAHelper.dual_mode_b_err] = dmmodel.b.val, dmmodel.b.err
+            sheet[GSAHelper.dual_mode_kd_val], sheet[GSAHelper.dual_mode_kd_err] = dmmodel.kd.val, dmmodel.kd.err
+            dmpredictions = predict_concentration(dmmodel, partial_pressures(isotherm, component=1))
+            sheet[GSAHelper.dual_mode_predictions_start, dim=1] = [dm.val for dm in dmpredictions]
+            sheet[GSAHelper.dual_mode_predictions_err_start, dim=1] = [dm.err for dm in dmpredictions]
+        catch
+            sheet[GSAHelper.dual_mode_ch_val], sheet[GSAHelper.dual_mode_ch_err] = "Fitting failed", "Fitting failed"
+            sheet[GSAHelper.dual_mode_b_val], sheet[GSAHelper.dual_mode_b_err] = "Fitting failed", "Fitting failed"
+            sheet[GSAHelper.dual_mode_kd_val], sheet[GSAHelper.dual_mode_kd_err] = "Fitting failed", "Fitting failed"
+        end
         
-        dmpredictions = predict_concentration(dmmodel, partial_pressures(isotherm, component=1))
-        sheet[GSAHelper.dual_mode_predictions_start, dim=1] = [dm.val for dm in dmpredictions]
-        sheet[GSAHelper.dual_mode_predictions_err_start, dim=1] = [dm.err for dm in dmpredictions]
-
         # write error analysis 
         write_error_analysis(GasSorptionApparatus(), system, xf)
     end
