@@ -5,44 +5,44 @@ using Test
 using Setfield
 
 @testset "SorptionApparatus.jl" begin
-    # # Vapor Sorption Apparatus
-    # println("Generating: Vapor Template")
-    # generatetemplate(VaporSorptionApparatus(), joinpath(@__DIR__, "template_results", "generated vapor template (empty).xlsx"))
+    # Vapor Sorption Apparatus
+    println("Generating: Vapor Template")
+    generatetemplate(VaporSorptionApparatus(), joinpath(@__DIR__, "template_results", "generated vapor template (empty).xlsx"))
     
-    # println("Processing: methanol_template_with_transients.xlsx")
-    # vapor_system = processtemplate(
-    #     VaporSorptionApparatus(), 
-    #     joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
-    #     joinpath(@__DIR__, "template_results", "methanol_results_with_transients.xlsx"); 
-    #     overwrite=true, verbose=true
-    # ) 
+    println("Processing: methanol_template_with_transients.xlsx")
+    vapor_system = processtemplate(
+        VaporSorptionApparatus(), 
+        joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
+        joinpath(@__DIR__, "template_results", "methanol_results_with_transients.xlsx"); 
+        overwrite=true, verbose=true
+    ) 
     
-    # println("Processing: methanol_template_with_transients.xlsx, but skipping the transients")
-    # vapor_system = processtemplate(
-    #     VaporSorptionApparatus(), 
-    #     joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
-    #     joinpath(@__DIR__, "template_results", "methanol_results_with_transients_skipped.xlsx");
-    #     overwrite=true, verbose=true, skip_transients=true
-    # ) 
+    println("Processing: methanol_template_with_transients.xlsx, but skipping the transients")
+    vapor_system = processtemplate(
+        VaporSorptionApparatus(), 
+        joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
+        joinpath(@__DIR__, "template_results", "methanol_results_with_transients_skipped.xlsx");
+        overwrite=true, verbose=true, skip_transients=true
+    ) 
 
-    # println("Processing: H2O neat 35C.xlsx, which caused loading errors")
-    # t1 = processtemplate(
-    #     VaporSorptionApparatus(), 
-    #     joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"),
-    #     joinpath(@__DIR__, "template_results", "H2O neat 35C.xlsx"),
-    #     overwrite=true, verbose=true
-    # ) 
+    println("Processing: H2O neat 35C.xlsx, which caused loading errors")
+    t1 = processtemplate(
+        VaporSorptionApparatus(), 
+        joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"),
+        joinpath(@__DIR__, "template_results", "H2O neat 35C.xlsx"),
+        overwrite=true, verbose=true
+    ) 
 
-    # @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
+    @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
 
-    # # run a template with fewer transient steps than sorption steps
-    # println("Processing: H2O 5% Crown Ether 25C.xlsx")
-    # vapor_system_2 = processtemplate(
-    #     VaporSorptionApparatus(),
-    #     joinpath(@__DIR__, "test_templates", "H2O 5% Crown Ether 25C.xlsx"),
-    #     joinpath(@__DIR__, "template_results", "H2O 5% Crown Ether 25C.xlsx"),
-    #     overwrite=true, verbose=true
-    # )
+    # run a template with fewer transient steps than sorption steps
+    println("Processing: H2O 5% Crown Ether 25C.xlsx")
+    vapor_system_2 = processtemplate(
+        VaporSorptionApparatus(),
+        joinpath(@__DIR__, "test_templates", "H2O 5% Crown Ether 25C.xlsx"),
+        joinpath(@__DIR__, "template_results", "H2O 5% Crown Ether 25C.xlsx"),
+        overwrite=true, verbose=true
+    )
 
     # Gas Sorption Apparatus
     generated_gas_template_path = joinpath(@__DIR__, "template_results", "generated gas template (empty).xlsx")
@@ -89,14 +89,12 @@ using Setfield
                 sampling_chamber_volume = strip_measurement_to_value(setup.sampling_chamber_volume),
             )
         )
-        savetemplate(new_setup, temp_saved_path)
+        savetemplate(new_setup, temp_saved_path; overwrite=true)
 
         modified_system = processtemplate(GasSorptionApparatus(), temp_saved_path)
         @test partial_pressures(modified_system.isotherm) == partial_pressures(gas_system.isotherm)
-        @show partial_pressures(modified_system.isotherm)
-        # @test partial_pressures(modified_system.isotherm, step=2, component=1).val == partial_pressures(gas_system.isotherm, step=2, component=1).val
-        @show partial_pressures(modified_system.isotherm, step=2, component=1).err
-        @show partial_pressures(gas_system.isotherm, step=2, component=1).err
+        @test partial_pressures(modified_system.isotherm, step=2, component=1).val == partial_pressures(gas_system.isotherm, step=2, component=1).val
+        @test partial_pressures(modified_system.isotherm, step=2, component=1).err != partial_pressures(gas_system.isotherm, step=2, component=1).err
     end
 end
 
