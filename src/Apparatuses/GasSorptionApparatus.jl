@@ -474,7 +474,8 @@ function processtemplate(::GasSorptionApparatus, template_path::String; kwargs..
 end
 
 function savetemplate(setup::GasSorptionSetup, filepath::String; overwrite=false)
-    if !overwrite
+
+    if overwrite
         if isfile(filepath) 
             @error "Overwriting has not been set, but the file already exists. Skipping save."
         end

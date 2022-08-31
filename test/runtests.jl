@@ -5,44 +5,44 @@ using Test
 using Setfield
 
 @testset "SorptionApparatus.jl" begin
-    # Vapor Sorption Apparatus
-    println("Generating: Vapor Template")
-    generatetemplate(VaporSorptionApparatus(), joinpath(@__DIR__, "template_results", "generated vapor template (empty).xlsx"))
+    # # Vapor Sorption Apparatus
+    # println("Generating: Vapor Template")
+    # generatetemplate(VaporSorptionApparatus(), joinpath(@__DIR__, "template_results", "generated vapor template (empty).xlsx"))
     
-    println("Processing: methanol_template_with_transients.xlsx")
-    vapor_system = processtemplate(
-        VaporSorptionApparatus(), 
-        joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
-        joinpath(@__DIR__, "template_results", "methanol_results_with_transients.xlsx"); 
-        overwrite=true, verbose=true
-    ) 
+    # println("Processing: methanol_template_with_transients.xlsx")
+    # vapor_system = processtemplate(
+    #     VaporSorptionApparatus(), 
+    #     joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
+    #     joinpath(@__DIR__, "template_results", "methanol_results_with_transients.xlsx"); 
+    #     overwrite=true, verbose=true
+    # ) 
     
-    println("Processing: methanol_template_with_transients.xlsx, but skipping the transients")
-    vapor_system = processtemplate(
-        VaporSorptionApparatus(), 
-        joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
-        joinpath(@__DIR__, "template_results", "methanol_results_with_transients_skipped.xlsx");
-        overwrite=true, verbose=true, skip_transients=true
-    ) 
+    # println("Processing: methanol_template_with_transients.xlsx, but skipping the transients")
+    # vapor_system = processtemplate(
+    #     VaporSorptionApparatus(), 
+    #     joinpath(@__DIR__, "test_templates", "methanol_template_with_transients.xlsx"), 
+    #     joinpath(@__DIR__, "template_results", "methanol_results_with_transients_skipped.xlsx");
+    #     overwrite=true, verbose=true, skip_transients=true
+    # ) 
 
-    println("Processing: H2O neat 35C.xlsx, which caused loading errors")
-    t1 = processtemplate(
-        VaporSorptionApparatus(), 
-        joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"),
-        joinpath(@__DIR__, "template_results", "H2O neat 35C.xlsx"),
-        overwrite=true, verbose=true
-    ) 
+    # println("Processing: H2O neat 35C.xlsx, which caused loading errors")
+    # t1 = processtemplate(
+    #     VaporSorptionApparatus(), 
+    #     joinpath(@__DIR__, "test_templates", "H2O neat 35C.xlsx"),
+    #     joinpath(@__DIR__, "template_results", "H2O neat 35C.xlsx"),
+    #     overwrite=true, verbose=true
+    # ) 
 
-    @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
+    # @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
 
-    # run a template with fewer transient steps than sorption steps
-    println("Processing: H2O 5% Crown Ether 25C.xlsx")
-    vapor_system_2 = processtemplate(
-        VaporSorptionApparatus(),
-        joinpath(@__DIR__, "test_templates", "H2O 5% Crown Ether 25C.xlsx"),
-        joinpath(@__DIR__, "template_results", "H2O 5% Crown Ether 25C.xlsx"),
-        overwrite=true, verbose=true
-    )
+    # # run a template with fewer transient steps than sorption steps
+    # println("Processing: H2O 5% Crown Ether 25C.xlsx")
+    # vapor_system_2 = processtemplate(
+    #     VaporSorptionApparatus(),
+    #     joinpath(@__DIR__, "test_templates", "H2O 5% Crown Ether 25C.xlsx"),
+    #     joinpath(@__DIR__, "template_results", "H2O 5% Crown Ether 25C.xlsx"),
+    #     overwrite=true, verbose=true
+    # )
 
     # Gas Sorption Apparatus
     generated_gas_template_path = joinpath(@__DIR__, "template_results", "generated gas template (empty).xlsx")
