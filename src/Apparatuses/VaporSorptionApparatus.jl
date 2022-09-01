@@ -157,7 +157,7 @@ module VSAHelper
         # optional analyses
     const optional_analyses_header, optional_analyses_var, optional_analyses_err = "L1", "M1", "N1"
         # zimm-lundberg
-    const zimm_lundberg_header = "L2"
+    const zimm_lundberg_header, zim_lundberg_dummy_val, zim_lundberg_dummy_err = "L2", "M2", "N2"
     const liq_phase_mol_vol_header, liq_phase_mol_vol_val, liq_phase_mol_vol_err = "L3", "M3", "N3"
 
 
@@ -351,6 +351,8 @@ function generatetemplate(::VaporSorptionApparatus, filepath = VSAHelper.default
         # add optional section
         sheet[VSAHelper.optional_analyses_header] = "Optional Analyses (add values to activate)"; sheet[VSAHelper.optional_analyses_var] = "Value"; sheet[VSAHelper.optional_analyses_err] = "σ"
         sheet[VSAHelper.zimm_lundberg_header] = "Zimm Lundberg Analysis"
+        sheet[VSAHelper.zim_lundberg_dummy_val] = "---"
+        sheet[VSAHelper.zim_lundberg_dummy_err] = "---"
         sheet[VSAHelper.liq_phase_mol_vol_header] = "Penetrant Liquid Phase Molar Volume (cm3/mol)"
 
         # add step values

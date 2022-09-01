@@ -475,10 +475,9 @@ end
 
 function savetemplate(setup::GasSorptionSetup, filepath::String; overwrite=false)
 
-    if overwrite
-        if isfile(filepath) 
-            @error "Overwriting has not been set, but the file already exists. Skipping save."
-        end
+    if !overwrite && isfile(filepath) 
+        @error "Overwriting has not been set, but the file already exists. Skipping save."
+        return
     end
 
     XLSX.openxlsx(filepath, mode="w"; enable_cache=false) do xf
