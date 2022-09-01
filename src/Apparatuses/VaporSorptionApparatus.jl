@@ -528,6 +528,7 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
     return system
 
 end
+
 function processtemplate(::VaporSorptionApparatus, template_path::String; kwargs...)
     return processtemplate(VaporSorptionApparatus(), template_path, nothing; kwargs...)
 end
