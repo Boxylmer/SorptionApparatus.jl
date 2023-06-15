@@ -294,8 +294,12 @@ function generatetemplate(::TransientSorptionApparatus, filepath=TSAHelper.defau
     return nothing
 end
 
-function readtemplate(::TransientSorptionApparatus, path::String; sheet_name=TSAHelper.default_sheet_name, apparatus_setup=nothing)  # read a template into a sorption setup struct
+function readtemplate(::TransientSorptionApparatus, path::String; kwargs...)
     xf = XLSX.readxlsx(path)
+    return readtemplate(TransientSorptionApparatus(), xf; kwargs...)
+end
+
+function readtemplate(::TransientSorptionApparatus, xf::XLSX.XLSXFile; sheet_name=TSAHelper.default_sheet_name, apparatus_setup=nothing)  # read a template into a sorption setup struct
     sheet = xf[sheet_name]
     
     num_steps = sheet[TSAHelper.num_steps_value] 
@@ -330,15 +334,29 @@ function readtemplate(::TransientSorptionApparatus, path::String; sheet_name=TSA
 
         time_colidx = start_col + TSAHelper.relative_input_time_col
         sorption_colidx = start_col + TSAHelper.relative_input_dimless_sorption_col
-        
+
+        # Works with XLSX 1.8.0+, but 1.8+ causes weird write errors
+
+        # time_vector = Float64.(XLSX.gettable(
+        #     sheet, XLSX.ColumnRange(time_colidx, time_colidx); 
+        #     first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
+        #     ).data[1])  
+       
+        # dimensionless_sorption_or_pressure_vector = Float64.(XLSX.gettable(
+        #     sheet, XLSX.ColumnRange(sorption_colidx, sorption_colidx); 
+        #     first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
+        #     ).data[1]) 
+
         time_vector = convert(Array{Float64}, XLSX.gettable(
-            sheet, XLSX.ColumnRange(time_colidx, time_colidx); first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
+            sheet, XLSX.ColumnRange(time_colidx, time_colidx); 
+            first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
             )[1][1])
 
         dimensionless_sorption_or_pressure_vector = convert(Array{Float64},XLSX.gettable(
             sheet, XLSX.ColumnRange(sorption_colidx, sorption_colidx); first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
             )[1][1])
-            
+
+
         if is_in_transient_pressure_mode
             pressure_vector = dimensionless_sorption_or_pressure_vector
             equilibrium_moles_sorbed = moles_sorbed_during_step(apparatus_setup, step_idx)
@@ -432,7 +450,7 @@ function processtemplate(::TransientSorptionApparatus, template_path::String, re
     cp(template_path, results_path; force=overwrite)
     
     # open the results file and start adding in the calculations done
-    XLSX.openxlsx(results_path, mode="rw") do xf
+    XLSX.openxlsx(results_path, mode="rw"; enable_cache=false) do xf
         sheet = xf[sheet_name]
             write_transient_sorption_system_to_sheet(system, sheet)
     end
@@ -442,11 +460,11 @@ function processtemplate(::TransientSorptionApparatus, template_path::String; kw
     return processtemplate(TransientSorptionApparatus(), template_path, nothing; kwargs...)
 end
 
-function is_template_valid(::TransientSorptionApparatus, args...; kwargs...)  # super duper inefficient, but should be "foolproof" in that it just reads the template into a setup
-    try 
-        readtemplate(TransientSorptionApparatus(), args...; kwargs...)
-        return true
-    catch
-        return false   
-    end
+function has_template(::TransientSorptionApparatus, wb_or_xf::Union{XLSX.Workbook, XLSX.XLSXFile})
+    for name in XLSX.sheetnames(wb_or_xf)
+        if name == TSAHelper.default_sheet_name
+            return true
+        end
+    end 
+    return false
 end
