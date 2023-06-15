@@ -8,12 +8,13 @@ Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 MembraneBase = "a9449b16-1c3f-48ab-aa2c-0b9c6d97beee"
 MembraneEOS = "11a4bec2-2c27-4554-8fe6-a2de72ffe064"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 SorptionModels = "44adabc6-386d-4db0-bb6e-0f7b06129544"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
+XLSX = "^0.7.0"
 julia = "1"
-XLSX = "^0.7.0"  # [0.7.0 - 0.8.0)
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
