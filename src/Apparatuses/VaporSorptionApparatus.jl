@@ -319,7 +319,7 @@ end
 
 # generate, read, and process (read, evaluate, and write) templates
 function generatetemplate(::VaporSorptionApparatus, filepath = VSAHelper.default_file_name)
-    XLSX.openxlsx(filepath, mode="w"; enable_cache=false) do xf
+    XLSX.openxlsx(filepath, mode="w"; enable_cache=true) do xf
         sheet = xf[1]
         XLSX.rename!(sheet, VSAHelper.default_sheet_title)
         sheet[VSAHelper.overall_header] = "Overall Properties"; sheet[VSAHelper.overall_val] = "Value"; sheet[VSAHelper.overall_err] = "Uncertainty"

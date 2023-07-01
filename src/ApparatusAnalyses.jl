@@ -104,7 +104,7 @@ function write_kinetic_analysis(excel_file, iso::IsothermData, transient_system:
 end
 
 function write_kinetic_analysis(filepath::AbstractString, iso::IsothermData, transient_system::Union{TransientSorptionSystem, Nothing})  
-    XLSX.openxlsx(filepath, mode="rw"; enable_cache=false) do xf  
+    XLSX.openxlsx(filepath, mode="rw"; enable_cache=true) do xf  
         return write_kinetic_analysis(xf, iso, transient_system)
     end
 end

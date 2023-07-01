@@ -326,7 +326,7 @@ function write_error_analysis(::GasSorptionApparatus, system::GasSorptionSystem,
 end
 
 function generatetemplate(::GasSorptionApparatus, filepath = GSAHelper.default_file_name)
-    XLSX.openxlsx(filepath, mode="w"; enable_cache=false) do xf
+    XLSX.openxlsx(filepath, mode="w"; enable_cache=true) do xf
         sheet = xf[1]
         XLSX.rename!(sheet, GSAHelper.default_sheet_title)
         
@@ -480,7 +480,7 @@ function savetemplate(setup::GasSorptionSetup, filepath::String; overwrite=false
         return
     end
 
-    XLSX.openxlsx(filepath, mode="w"; enable_cache=false) do xf
+    XLSX.openxlsx(filepath, mode="w"; enable_cache=true) do xf
         sheet = xf[1]
         XLSX.rename!(sheet, GSAHelper.default_sheet_title)
         

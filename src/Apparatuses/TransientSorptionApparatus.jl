@@ -451,7 +451,7 @@ function processtemplate(::TransientSorptionApparatus, template_path::String, re
     
     # open the results file and start adding in the calculations done
     # todo try to update XLSX to 0.9 and enable_cache = true to see if we can remove the version restriction
-    XLSX.openxlsx(results_path, mode="rw"; enable_cache=false) do xf
+    XLSX.openxlsx(results_path, mode="rw"; enable_cache=true) do xf
         sheet = xf[sheet_name]
             write_transient_sorption_system_to_sheet(system, sheet)
     end
