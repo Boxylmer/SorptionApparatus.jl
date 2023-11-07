@@ -43,24 +43,23 @@ function moles_sorbed_during_step(gss::GasSorptionSetup, step::Integer, model::M
 
     real_charge_chamber_volume = gss.charge_chamber_volume * MembraneBase.L_PER_CC    
     
-    v_i_ch = volume(model, MembraneBase.ATM_PER_PA * gss.charge_chamber_initial_pressures[step], gss.temperature)
+    v_i_ch = volume(model, MembraneBase.MPA_PER_PA * gss.charge_chamber_initial_pressures[step], gss.temperature)
     n_i_ch = real_charge_chamber_volume / v_i_ch
     
-    
-    v_f_ch = volume(model, MembraneBase.ATM_PER_PA * gss.charge_chamber_final_pressures[step], gss.temperature)
+    v_f_ch = volume(model, MembraneBase.MPA_PER_PA * gss.charge_chamber_final_pressures[step], gss.temperature)
     n_f_ch = real_charge_chamber_volume / v_f_ch
     
     if isnothing(transient_pressure)
-        v_f_s = volume(model, MembraneBase.ATM_PER_PA * gss.sampling_chamber_final_pressures[step], gss.temperature)
+        v_f_s = volume(model, MembraneBase.MPA_PER_PA * gss.sampling_chamber_final_pressures[step], gss.temperature)
     else
-        v_f_s = volume(model, MembraneBase.ATM_PER_PA * transient_pressure, gss.temperature)
+        v_f_s = volume(model, MembraneBase.MPA_PER_PA * transient_pressure, gss.temperature)
     end
     n_f_s = real_sampling_chamber_volume / v_f_s
     
     if step == 1
         n_fm1_s = 0
     else
-        v_fm1_s = volume(model, MembraneBase.ATM_PER_PA * gss.sampling_chamber_final_pressures[step - 1], gss.temperature)
+        v_fm1_s = volume(model, MembraneBase.MPA_PER_PA * gss.sampling_chamber_final_pressures[step - 1], gss.temperature)
         n_fm1_s = real_sampling_chamber_volume / v_fm1_s
     end
 
@@ -86,8 +85,8 @@ function GasSorptionSystem(gss::GasSorptionSetup)
     
     # define what equilibrium pressures are
     final_pressures = gss.sampling_chamber_final_pressures * MembraneBase.MPA_PER_PA
-    molar_volumes = [volume(model, pres_mpa * MembraneBase.ATM_PER_MPA, gss.temperature) for pres_mpa in final_pressures]
-    equilibrium_fugacities = [fugacity(model, pres ./ MembraneBase.MPA_PER_ATM, gss.temperature)[1] for pres in final_pressures] * MembraneBase.MPA_PER_ATM # MPa
+    molar_volumes = [volume(model, pres_mpa, gss.temperature) for pres_mpa in final_pressures]
+    equilibrium_fugacities = [fugacity(model, pres, gss.temperature)[1] for pres in final_pressures] # MPa
 
 
     # create an isotherm

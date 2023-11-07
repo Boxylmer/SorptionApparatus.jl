@@ -1,7 +1,7 @@
 name = "SorptionApparatus"
 uuid = "c53a909a-c477-4ff1-81c4-bc1440289f4f"
 authors = ["Will <carboxylmer@gmail.com> and contributors"]
-version = "0.2.26"
+version = "0.3.0"
 
 [deps]
 Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
@@ -15,6 +15,7 @@ XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 [compat]
 XLSX = "^0.7.0"
 julia = "1"
+MembraneEOS = "0.2"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
