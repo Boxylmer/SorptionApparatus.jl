@@ -337,24 +337,24 @@ function readtemplate(::TransientSorptionApparatus, xf::XLSX.XLSXFile; sheet_nam
 
         # Works with XLSX 1.8.0+, but 1.8+ causes weird write errors
 
-        # time_vector = Float64.(XLSX.gettable(
-        #     sheet, XLSX.ColumnRange(time_colidx, time_colidx); 
-        #     first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
-        #     ).data[1])  
-       
-        # dimensionless_sorption_or_pressure_vector = Float64.(XLSX.gettable(
-        #     sheet, XLSX.ColumnRange(sorption_colidx, sorption_colidx); 
-        #     first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
-        #     ).data[1]) 
-
-        time_vector = convert(Array{Float64}, XLSX.gettable(
+        time_vector = Float64.(XLSX.gettable(
             sheet, XLSX.ColumnRange(time_colidx, time_colidx); 
             first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
-            )[1][1])
+            ).data[1])  
+       
+        dimensionless_sorption_or_pressure_vector = Float64.(XLSX.gettable(
+            sheet, XLSX.ColumnRange(sorption_colidx, sorption_colidx); 
+            first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
+            ).data[1]) 
 
-        dimensionless_sorption_or_pressure_vector = convert(Array{Float64},XLSX.gettable(
-            sheet, XLSX.ColumnRange(sorption_colidx, sorption_colidx); first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
-            )[1][1])
+        # time_vector = convert(Array{Float64}, XLSX.gettable(
+        #     sheet, XLSX.ColumnRange(time_colidx, time_colidx); 
+        #     first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
+        #     )[1][1])
+
+        # dimensionless_sorption_or_pressure_vector = convert(Array{Float64},XLSX.gettable(
+        #     sheet, XLSX.ColumnRange(sorption_colidx, sorption_colidx); first_row=start_row + TSAHelper.relative_data_row_start, infer_eltypes=false
+        #     )[1][1])
 
 
         if is_in_transient_pressure_mode

@@ -62,6 +62,7 @@ using Measurements
         overwrite=true
     ) 
     @test concentration(gas_system.isotherm)[end].val ≈ 135.74857876430664
+    @test fugacities(gas_system.isotherm)[end].val ≈ 2.6340047961663804
 
     # do saved templates avoid making changes to the template values?
     println("Processing: $tpbo_75_co2_27c_resaved_template_path")

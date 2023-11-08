@@ -465,7 +465,8 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
     cp(template_path, results_path; force=overwrite)
 
     # open the results file and start adding in the calculations done
-    XLSX.openxlsx(results_path, mode="rw") do xf
+    # XLSX.openxlsx(results_path, mode="rw") do xf
+    xf = XLSX.open_xlsx_template(results_path)
         sheet = xf[sheet_name]
         # put the results headers back in, in case we added more columns
         VSAHelper._add_vapor_sorption_results_headers(sheet)
@@ -526,7 +527,8 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
             write_analysis(zimm_lundberg_analysis, xf)
         end
 
-    end
+    # end
+    # XLSX.closefile(xf)
     return system
 
 end
