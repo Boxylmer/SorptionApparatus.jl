@@ -45,20 +45,20 @@ module KineticAnalysisHelper
         sheet[row, conc_g_err_col, dim=1] = [a.err for a in concentration(isotherm; component=1, pol_units=:g, gas_units=:g)]
         sheet[row, mass_frac_col, dim=1] = [w.val for w in penetrant_mass_fractions(isotherm; component=1)]
         sheet[row, mass_frac_err_col, dim=1] = [w.err for w in penetrant_mass_fractions(isotherm; component=1)]
-    
-        sheet[row, ln_activity_col, dim=1] = [a.val for a in deconvolution_object.lna]
-        sheet[row, ln_activity_err_col, dim=1] = [a.err for a in deconvolution_object.lna]
-        sheet[row, ln_mass_frac_col, dim=1] = [w.val for w in deconvolution_object.lnw]
-        sheet[row, ln_mass_frac_err_col, dim=1] = [w.err for w in deconvolution_object.lnw]
-        sheet[row, slope_col, dim=1] = [item.val for item in deconvolution_object.slopes]
-        sheet[row, slope_err_col, dim=1] = [item.err for item in deconvolution_object.slopes]
+
+        sheet[row, ln_activity_col, dim=1] = [a.val for a in deconvolution_object.thermo_factor_analysis.lna]
+        sheet[row, ln_activity_err_col, dim=1] = [a.err for a in deconvolution_object.thermo_factor_analysis.lna]
+        sheet[row, ln_mass_frac_col, dim=1] = [w.val for w in deconvolution_object.thermo_factor_analysis.lnw]
+        sheet[row, ln_mass_frac_err_col, dim=1] = [w.err for w in deconvolution_object.thermo_factor_analysis.lnw]
+        # sheet[row, slope_col, dim=1] = [item.val for item in deconvolution_object.slopes]
+        # sheet[row, slope_err_col, dim=1] = [item.err for item in deconvolution_object.slopes]
         
         sheet[row, diffusivity_col, dim=1] = [d.val for d in diffusivities]
         sheet[row, diffusivity_err_col, dim=1] = [d.err for d in diffusivities]
         sheet[row, kinetic_factor_col, dim=1] = [d.val for d in deconvolution_object.kinetic_factors]
         sheet[row, kinetic_factor_err_col, dim=1] = [d.err for d in deconvolution_object.kinetic_factors]
-        sheet[row, alpha_col, dim=1] = [d.val for d in deconvolution_object.thermodynamic_factors]
-        sheet[row, alpha_err_col, dim=1] = [d.err for d in deconvolution_object.thermodynamic_factors]
+        sheet[row, alpha_col, dim=1] = [d.val for d in deconvolution_object.thermo_factor_analysis.thermodynamic_factors]
+        sheet[row, alpha_err_col, dim=1] = [d.err for d in deconvolution_object.thermo_factor_analysis.thermodynamic_factors]
     end
 
 end

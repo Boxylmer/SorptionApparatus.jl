@@ -518,7 +518,9 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
                 system.transient_system, 
                 xf[TSAHelper.default_sheet_name] 
             )
-            write_kinetic_analysis(xf, isotherm, system.transient_system)
+            if system.setup.num_steps == system.transient_system.setup.num_steps
+                write_kinetic_analysis(xf, isotherm, system.transient_system)
+            end
         end
 
         # deal with zimm-lundberg

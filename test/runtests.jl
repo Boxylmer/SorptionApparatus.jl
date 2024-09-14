@@ -37,7 +37,7 @@ using Measurements
     @test concentration(vapor_system.isotherm)[end].val ≈ 120.99026680342382
 
     # run a template with fewer transient steps than sorption steps
-    println("Processing: H2O 5% Crown Ether 25C.xlsx")
+    println("Processing: H2O 5% Crown Ether 25C.xlsx, which has fewer transient steps than sorption steps")
     vapor_system_2 = processtemplate(
         VaporSorptionApparatus(),
         joinpath(@__DIR__, "test_templates", "H2O 5% Crown Ether 25C.xlsx"),
