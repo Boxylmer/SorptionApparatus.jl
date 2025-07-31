@@ -465,8 +465,8 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
     cp(template_path, results_path; force=overwrite)
 
     # open the results file and start adding in the calculations done
-    # XLSX.openxlsx(results_path, mode="rw") do xf
-    xf = XLSX.open_xlsx_template(results_path)
+    XLSX.openxlsx(results_path, mode="rw") do xf
+    # xf = XLSX.open_xlsx_template(results_path)
         sheet = xf[sheet_name]
         # put the results headers back in, in case we added more columns
         VSAHelper._add_vapor_sorption_results_headers(sheet)
@@ -518,7 +518,9 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
                 system.transient_system, 
                 xf[TSAHelper.default_sheet_name] 
             )
-            write_kinetic_analysis(xf, isotherm, system.transient_system)
+            if system.setup.num_steps == system.transient_system.setup.num_steps
+                write_kinetic_analysis(xf, isotherm, system.transient_system)
+            end
         end
 
         # deal with zimm-lundberg
@@ -527,7 +529,7 @@ function processtemplate(::VaporSorptionApparatus, template_path::String, result
             write_analysis(zimm_lundberg_analysis, xf)
         end
 
-    # end
+    end
     # XLSX.closefile(xf)
     return system
 
